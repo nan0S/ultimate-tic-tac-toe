@@ -19,9 +19,6 @@ void GameRunner::playGame(bool verbose) {
 		std::mksh<RandomPlayer>()
 	};
 
-	announceGameEnd(game->getWinnerName());
-	return;
-
 	int turn = 0; 
 	while (!game->isTerminal()) {
 		auto& player = players[turn];
@@ -30,7 +27,7 @@ void GameRunner::playGame(bool verbose) {
 		turn ^= 1;
 
 		if (verbose)
-			std::cout << *game << std::endl;
+			std::cout << *game << '\n';
 	}
 	announceGameEnd(game->getWinnerName());
 }

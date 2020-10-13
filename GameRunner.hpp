@@ -4,6 +4,7 @@
 #include "StatSystem.hpp"
 
 #include <string>
+#include <optional>
 
 class GameRunner {
 public:

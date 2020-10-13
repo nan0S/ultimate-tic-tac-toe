@@ -34,11 +34,11 @@ void StatSystem::showStats() {
 	long double msPassed = accumulatedTime * 1e-6;
 
 	std::cout << std::fixed << std::setprecision(2);
-	std::cout << std::endl;
-	std::cout << "Reapeats:\t" << numberOfExps << std::endl;
-	std::cout << "Total time:\t" << msPassed << " ms" << std::endl;
+	std::cout << '\n';
+	std::cout << "Reapeats:\t" << numberOfExps << '\n';
+	std::cout << "Total time:\t" << msPassed << " ms" << '\n';
 	std::cout << std::setprecision(3);
-	std::cout << "Avg time:\t" << msPassed / numberOfExps << " ms" << std::endl;
+	std::cout << "Avg time:\t" << msPassed / numberOfExps << " ms" << '\n';
 
 	std::cout << std::setprecision(2);
 	for (const auto& record : stats) {
@@ -46,10 +46,10 @@ void StatSystem::showStats() {
 			continue;
 
 		double winrate = static_cast<double>(record.second) / numberOfExps * 100;
-		std::cout << record.first << ":\t" << winrate << "%" << std::endl;
+		std::cout << record.first << ":\t" << winrate << "%" << '\n';
 	}
 
-	std::cout << std::endl;
+	std::cout << '\n';
 }
 
 void StatSystem::reset() {

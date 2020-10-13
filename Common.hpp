@@ -47,13 +47,13 @@ namespace Random {
 	}
 }
 
-#define PROFILING 1
+#define PROFILING 0
 #if PROFILING
 #define PROFILE_SCOPE(name) SimpleTimer timer##__LINE__(name)
-// #define PROFILE_FUNCTION() PROFILE_SCOPE(__FUNCTION__)
 #define PROFILE_FUNCTION() PROFILE_SCOPE(__PRETTY_FUNCTION__)
 #else
 #define PROFILE_SCOPE(name)
+#define PROFILE_FUNCTION()
 #endif
 
 class SimpleTimer {

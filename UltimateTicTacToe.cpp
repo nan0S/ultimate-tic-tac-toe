@@ -130,7 +130,7 @@ TicTacToe::PlayerTurn UltimateTicTacToe::getWinner() const {
 		return board[0][0].getWinner();
 	if (isDiag2Done())
 		return board[0][BOARD_SIZE - 1].getWinner();
-	// assert(isAllTerminal());
+	assert(isAllTerminal());
 	return TicTacToe::NONE; 
 }
 
@@ -169,7 +169,7 @@ void UltimateTicTacToe::printLineSep(std::ostream& out) const {
 std::string UltimateTicTacToe::getWinnerName() const {
 	PROFILE_FUNCTION();
 
-	// assert(isTerminal());
+	assert(isTerminal());
 	const auto winner = getWinner();
 	switch (winner) {
 		case TicTacToe::PLAYER1:

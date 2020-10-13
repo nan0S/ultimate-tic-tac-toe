@@ -16,7 +16,7 @@ void parseArgs(int argc, char* argv[]) {
 
 	static option longopts[] {
 		{"verbose", no_argument, 0, 'v'},
-			{"help", no_argument, 0, 'h'}
+		{"help", no_argument, 0, 'h'}
 	};
 
 	int idx, opt;
@@ -32,10 +32,10 @@ void parseArgs(int argc, char* argv[]) {
 	}
 
 	int rest = argc - optind;
-	if (rest > 1)
-		errorExit("Usage: tictactoe [times]");
-	if (rest == 1)
-		numberOfGames = std::stoi(argv[optind]);
+	if (rest > 2)
+		errorExit("Usage: tictactoe [times] [saveFile]");
+	if (rest >= 1)
+		numberOfGames = std::stoi(argv[optind++]);
 }
 
 
