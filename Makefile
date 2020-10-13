@@ -22,6 +22,9 @@ install: $(TARGET) clean
 debug: CXXFLAGS += $(DFLAGS)
 debug: $(TARGET)
 
+nodebug: CXXFLAGS += -DNDEBUG
+nodebug: $(TARGET)
+
 $(TARGET): $(OBJS)
 	$(CC) $(CXXFLAGS) -o $(EXENAME) $^
 

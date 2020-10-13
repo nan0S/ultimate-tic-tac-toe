@@ -40,20 +40,6 @@ void TicTacToe::apply(PlayerTurn turn, const TicTacToeAction& action) {
 	--emptyCells;
 }
 
-std::vector<TicTacToeAction> TicTacToe::getValidActions() {
-	PROFILE_FUNCTION();
-
-	if (isTerminal())
-		return {};
-
-	std::vector<TicTacToeAction> validActions;
-	for (int i = 0; i < BOARD_SIZE; ++i)
-		for (int j = 0; j < BOARD_SIZE; ++j)
-			if (isEmpty(i, j))
-				validActions.emplace_back(i, j);
-	return validActions;
-}
-
 bool TicTacToe::isRowDone(int row) const {
 	PROFILE_FUNCTION();
 
@@ -150,7 +136,24 @@ void TicTacToe::printRow(std::ostream& out, int row) const {
 char TicTacToe::getCharAt(int row, int col) const {
 	if (isTerminal())
 		return getCharAtTerminal(row, col);
+	return convertSymbolAt(row, col);
 
+}
+
+char TicTacToe::getCharAtTerminal(int row, int col) const {
+	auto winner = getWinner();
+	if (winner == PLAYER1)
+		return isOnDiag1(row, col) || 
+			  isOnDiag2(row, col) ?
+			  'X' : ' ';
+	else if (winner == PLAYER2)
+		return isOnSide(row, col) ||
+			  isOnTop(row, col) ?
+			  'O' : ' ';
+	return convertSymbolAt(row, col);
+}
+
+char TicTacToe::convertSymbolAt(int row, int col) const {
 	const auto symbol = board[row][col];
 	switch (symbol) {
 		case PLAYER1:
@@ -161,18 +164,6 @@ char TicTacToe::getCharAt(int row, int col) const {
 			return ' ';
 	}
 	assert(false);
-}
-
-char TicTacToe::getCharAtTerminal(int row, int col) const {
-	auto winner = getWinner();
-	if (winner == PLAYER1)
-		return isOnDiag1(row, col) || 
-			  isOnDiag2(row, col) ?
-			  'X' : ' ';
-	else
-		return isOnSide(row, col) ||
-			  isOnTop(row, col) ?
-			  'O' : ' ';
 }
 
 bool TicTacToe::isOnDiag1(int row, int col) const {

@@ -17,6 +17,7 @@ public:
 	bool isTerminal() const override;
 	void apply(const sp<Action>& act) override;
 	std::vector<sp<Action>> getValidActions() override;
+	up<State> clone() override;
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;

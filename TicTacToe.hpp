@@ -17,7 +17,6 @@ public:
 
 	bool isTerminal() const;
 	void apply(PlayerTurn turn, const TicTacToeAction& action);
-	std::vector<TicTacToeAction> getValidActions();
 
 	void printLineSep(std::ostream& out) const;
 	void printRow(std::ostream& out, int row) const;
@@ -43,6 +42,7 @@ private:
 
 	inline char getCharAt(int row, int col) const;
 	inline char getCharAtTerminal(int row, int col) const;
+	inline char convertSymbolAt(int row, int col) const;
 
 	inline bool isOnDiag1(int row, int col) const;
 	inline bool isOnDiag2(int row, int col) const;

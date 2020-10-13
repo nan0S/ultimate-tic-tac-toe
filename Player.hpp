@@ -8,6 +8,7 @@
 class Player {
 public:
 	virtual sp<Action> getAction(const up<State>& state) = 0;
+	virtual ~Player() = default;
 };
 
 #endif /* PLAYER_HPP */

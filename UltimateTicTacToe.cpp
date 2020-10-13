@@ -118,11 +118,12 @@ std::vector<sp<Action>> UltimateTicTacToe::getValidActions() {
 					if (cell.isEmpty(k, l))
 						validActions.push_back(std::mksh<UltimateTicTacToeAction>(
 							i, j, TicTacToe::TicTacToeAction(k, l)));
-			// const auto val = board[i][j].getValidActions();
-			// for (const auto& x : val)
-				// validActions.push_back(std::mksh<UltimateTicTacToeAction>(i, j, x));
 		}
 	return validActions;
+}
+
+up<State> UltimateTicTacToe::clone() {
+	return up<State>(new UltimateTicTacToe(*this));
 }
 
 TicTacToe::PlayerTurn UltimateTicTacToe::getWinner() const {
