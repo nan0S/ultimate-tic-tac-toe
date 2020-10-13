@@ -13,7 +13,7 @@ void GameRunner::playGames(int numberOfGames, bool verbose) {
 
 void GameRunner::playGame(bool verbose) {
 	announceGameStart();
-	sp<State> game = std::mksh<UltimateTicTacToe>();
+	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Player> players[] {
 		std::mksh<RandomPlayer>(),
 		std::mksh<RandomPlayer>()

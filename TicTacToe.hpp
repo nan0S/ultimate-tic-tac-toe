@@ -23,7 +23,9 @@ public:
 	void printRow(std::ostream& out, int row) const;
 
 	PlayerTurn getWinner() const;
+
 	bool isLegal(const TicTacToeAction& action) const;
+	bool isEmpty(int i, int j) const;
 
 private:
 	static constexpr int BOARD_SIZE = 3;
@@ -37,7 +39,6 @@ private:
 	bool isDiag1Done() const;
 	bool isDiag2Done() const;
 
-	inline bool isEmpty(int i, int j) const;
 	inline bool isInRange(int idx) const;
 
 	inline char getCharAt(int row, int col) const;

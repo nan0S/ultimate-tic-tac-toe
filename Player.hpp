@@ -7,7 +7,7 @@
 
 class Player {
 public:
-	virtual sp<Action> getAction(const sp<State>& state) = 0;
+	virtual sp<Action> getAction(const up<State>& state) = 0;
 };
 
 #endif /* PLAYER_HPP */

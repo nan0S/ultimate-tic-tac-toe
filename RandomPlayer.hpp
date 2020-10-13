@@ -5,7 +5,7 @@
 
 class RandomPlayer : public Player {
 public:
-	sp<Action> getAction(const sp<State>& state) override;
+	sp<Action> getAction(const up<State>& state) override;
 };
 
 #endif /* RANDOM_PLAYER_HPP */

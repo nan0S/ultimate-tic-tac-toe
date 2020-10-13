@@ -110,9 +110,17 @@ std::vector<sp<Action>> UltimateTicTacToe::getValidActions() {
 	std::vector<sp<Action>> validActions;
 	for (int i = 0; i < BOARD_SIZE; ++i)
 		for (int j = 0; j < BOARD_SIZE; ++j) {
-			const auto val = board[i][j].getValidActions();
-			for (const auto& x : val)
-				validActions.push_back(std::mksh<UltimateTicTacToeAction>(i, j, x));
+			const auto& cell = board[i][j];
+			if (cell.isTerminal())
+				continue;
+			for (int k = 0; k < BOARD_SIZE; ++k)
+				for (int l = 0; l < BOARD_SIZE; ++l)
+					if (cell.isEmpty(k, l))
+						validActions.push_back(std::mksh<UltimateTicTacToeAction>(
+							i, j, TicTacToe::TicTacToeAction(k, l)));
+			// const auto val = board[i][j].getValidActions();
+			// for (const auto& x : val)
+				// validActions.push_back(std::mksh<UltimateTicTacToeAction>(i, j, x));
 		}
 	return validActions;
 }

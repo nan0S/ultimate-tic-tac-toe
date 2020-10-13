@@ -1,0 +1,7 @@
+
+Reapeats:	100000
+Total time:	19993.78 ms
+Avg time:	0.200 ms
+Player O:	37.49%
+Player X:	41.60%
+
