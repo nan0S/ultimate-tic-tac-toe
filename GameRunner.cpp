@@ -3,8 +3,8 @@
 #include "Common.hpp"
 #include "UltimateTicTacToe.hpp"
 #include "RandomPlayer.hpp"
-
-#define NDEBUG
+#include "FlatMCTSPlayer.hpp"
+#include "TicTacToeRealPlayer.hpp"
 
 void GameRunner::playGames(int numberOfGames, bool verbose) {
 	statSystem.reset();
@@ -17,25 +17,12 @@ void GameRunner::playGame(bool verbose) {
 	announceGameStart();
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Player> players[] {
-		std::mksh<RandomPlayer>(),
+		std::mksh<FlatMCTSPlayer>(),
 		std::mksh<RandomPlayer>()
 	};
 
-	// using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
-	// using TicTacToeAction = TicTacToe::TicTacToeAction;
-	// auto action1 = std::mksh<UltimateTicTacToeAction>(
-		// 1, 2, TicTacToeAction(2, 2));
-	// auto action2 = std::mksh<UltimateTicTacToeAction>(
-		// 2, 2, TicTacToeAction(1, 2));
-	// std::cout << *game << '\n';
-	// auto game2 = game->applyCopy(action1);
-	// std::cout << *game << '\n';
-	// std::cout << *game2 << '\n';
-	// game2->apply(action2);
-	// game->apply(action1);
-	// std::cout << *game << '\n';
-	// std::cout << *game2 << '\n';
-	// return;
+	if (verbose)
+		std::cout << *game << '\n';
 
 	int turn = 0; 
 	while (!game->isTerminal()) {

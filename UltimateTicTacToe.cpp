@@ -119,7 +119,26 @@ std::vector<sp<Action>> UltimateTicTacToe::getValidActions() {
 						validActions.push_back(std::mksh<UltimateTicTacToeAction>(
 							i, j, TicTacToe::TicTacToeAction(k, l)));
 		}
+	std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 	return validActions;
+}
+
+bool UltimateTicTacToe::isValid(const sp<Action>& act) {
+	const auto& action = std::dynamic_pointer_cast<UltimateTicTacToeAction>(act);
+	assert(action);
+	return isLegal(action);
+}
+
+void UltimateTicTacToe::record() {
+	assert(!recording);
+	recordedTurn = turn == TicTacToe::PLAYER1 ? TicTacToe::PLAYER2 : TicTacToe::PLAYER1;
+	recording = true;
+}
+
+bool UltimateTicTacToe::didWon() {
+	assert(recording);
+	recording = false;
+	return recordedTurn == getWinner();
 }
 
 up<State> UltimateTicTacToe::clone() {

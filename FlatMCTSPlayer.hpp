@@ -7,22 +7,20 @@
 
 #include <vector>
 
-class FlatMCTSPlayer {
+class FlatMCTSPlayer : public Player {
 public:
 	FlatMCTSPlayer(const int numberOfIters = 100);
 	sp<Action> getAction(const up<State>& state);
 	
-private:
 	struct ActionStats {
 		int winCount = 0;
 		int total = 0;
+		bool operator<(const ActionStats& o) const;
 	};
 
+private:
 	const int numberOfIters;
 	std::vector<ActionStats> stats;
-
-	sp<Action> chooseAction(const sp<State>& state,
-			const std::vector<sp<Action>>& actions);
 };
 
 #endif /* MCTS_PLAYER_HPP */

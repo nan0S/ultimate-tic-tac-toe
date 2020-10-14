@@ -9,7 +9,9 @@ OBJS = main.o \
 	TicTacToe.o \
 	UltimateTicTacToe.o \
 	GameRunner.o \
-	StatSystem.o
+	StatSystem.o \
+	FlatMCTSPlayer.o \
+	TicTacToeRealPlayer.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O3

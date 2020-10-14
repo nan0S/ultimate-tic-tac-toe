@@ -16,15 +16,25 @@ public:
 
 	bool isTerminal() const override;
 	void apply(const sp<Action>& act) override;
+
 	std::vector<sp<Action>> getValidActions() override;
+	bool isValid(const sp<Action>& act) override;
+
+	void record() override;
+	bool didWon() override;
 	up<State> clone() override;
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;
+
+	bool isLegal(const sp<UltimateTicTacToeAction>& action) const;
 	
-private:
 	static constexpr int BOARD_SIZE = 3;
 	static_assert(BOARD_SIZE > 0, "Board size has to be positive");
+
+private:
+	bool recording = false;
+	TicTacToe::PlayerTurn recordedTurn;
 
 	TicTacToe::PlayerTurn turn = TicTacToe::PLAYER1;
 	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
@@ -35,7 +45,6 @@ private:
 	bool isDiag1Done() const;
 	bool isDiag2Done() const;
 
-	bool isLegal(const sp<UltimateTicTacToeAction>& action) const;
 	bool isInRange(int idx) const;
 
 	TicTacToe::PlayerTurn getWinner() const;
