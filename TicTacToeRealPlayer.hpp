@@ -7,6 +7,7 @@
 class TicTacToeRealPlayer : public Player {
 public:
 	sp<Action> getAction(const up<State>& state) override;
+	std::map<std::string, std::string> getDesc() const override;
 	
 private:
 	bool isInRange(int idx) const;

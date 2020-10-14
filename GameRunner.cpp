@@ -17,9 +17,17 @@ void GameRunner::playGame(bool verbose) {
 	announceGameStart();
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Player> players[] {
-		std::mksh<FlatMCTSPlayer>(),
+		std::mksh<FlatMCTSPlayer>(200),
 		std::mksh<RandomPlayer>()
 	};
+
+	static bool firstGame = true;
+	if (firstGame) {
+		int playerCount = sizeof(players) / sizeof(players[0]);
+		for (int i = 0; i < playerCount; ++i)
+			statSystem.addDesc("PLAYER" + std::to_string(i), players[i]->getDesc());
+		firstGame = false;
+	}
 
 	if (verbose)
 		std::cout << *game << '\n';

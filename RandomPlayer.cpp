@@ -7,3 +7,7 @@ sp<Action> RandomPlayer::getAction(const up<State>& state) {
 	assert(!validActions.empty());
 	return Random::choice(validActions);
 }
+
+std::map<std::string, std::string> RandomPlayer::getDesc() const {
+	return { {"Random player with uniform distribution.", ""} };
+}

@@ -32,3 +32,7 @@ sp<Action> TicTacToeRealPlayer::getAction(const up<State>& state) {
 bool TicTacToeRealPlayer::isInRange(int idx) const {
 	return 1 <= idx && idx <= UltimateTicTacToe::BOARD_SIZE;
 }
+
+std::map<std::string, std::string> TicTacToeRealPlayer::getDesc() const {
+	return { { "Real world, interactive player.", "" } };
+}

@@ -52,3 +52,9 @@ sp<Action> FlatMCTSPlayer::getAction(const up<State>& state) {
 bool ActionStats::operator<(const ActionStats& o) const {
 	return 1ll * winCount * o.total < 1ll * o.winCount * total;
 }
+
+std::map<std::string, std::string> FlatMCTSPlayer::getDesc() const {
+	return { { "Flat MCTS player.", "" },
+		{ "Number of MCTS iterations", std::to_string(numberOfIters) }
+	};
+}

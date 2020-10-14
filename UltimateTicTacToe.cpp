@@ -201,9 +201,9 @@ std::string UltimateTicTacToe::getWinnerName() const {
 	const auto winner = getWinner();
 	switch (winner) {
 		case TicTacToe::PLAYER1:
-			return "Player X";
+			return "PLAYER0 / PlayerX";
 		case TicTacToe::PLAYER2:
-			return "Player O";
+			return "PLAYER1 / PlayerO";
 		case TicTacToe::NONE:
 			return "";
 	}

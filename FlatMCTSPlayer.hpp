@@ -18,6 +18,8 @@ public:
 		bool operator<(const ActionStats& o) const;
 	};
 
+	std::map<std::string, std::string> getDesc() const override;
+
 private:
 	const int numberOfIters;
 	std::vector<ActionStats> stats;

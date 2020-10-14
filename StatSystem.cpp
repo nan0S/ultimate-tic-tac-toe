@@ -23,7 +23,7 @@ void StatSystem::recordEnd(const std::string& name) {
 	accumulatedTime += std::chrono::duration_cast<
 		std::chrono::nanoseconds>(endPoint - startPoint).count();
 	++numberOfExps;
-	++stats[name];
+	++counter[name];
 	isRunning = false;
 }
 
@@ -33,15 +33,27 @@ void StatSystem::showStats() {
 
 	long double msPassed = accumulatedTime * 1e-6;
 
+
 	std::cout << std::fixed << std::setprecision(2);
 	std::cout << '\n';
 	std::cout << "Reapeats:\t" << numberOfExps << '\n';
-	std::cout << "Total time:\t" << msPassed << " ms" << '\n';
+	std::cout << "Total time:\t" << msPassed * 0.001 << " s" << '\n';
 	std::cout << std::setprecision(3);
 	std::cout << "Avg time:\t" << msPassed / numberOfExps << " ms" << '\n';
 
+	for (const auto& [label, vals]: desc)
+		if (!vals.empty()) {
+			std::cout << '\n' << label << ":\n";
+			for (const auto& [key, val] : vals)
+				if (val == "")
+					std::cout << std::string(3, ' ') << key << '\n';
+				else
+					std::cout << std::string(3, ' ') << key << ": " << val << '\n';
+		}
+	std::cout << '\n';
+
 	std::cout << std::setprecision(2);
-	for (const auto& record : stats) {
+	for (const auto& record : counter) {
 		if (record.first == "")
 			continue;
 
@@ -52,9 +64,16 @@ void StatSystem::showStats() {
 	std::cout << '\n';
 }
 
+void StatSystem::addDesc(const std::string& label,
+		const std::map<std::string, std::string>& vals) {
+	assert(desc.count(label) == 0);
+	desc[label] = vals;
+}
+
 void StatSystem::reset() {
 	accumulatedTime = 0;
-	stats.clear();
+	counter.clear();
+	desc.clear();	
 	numberOfExps = 0;
 	isRunning = false;
 }

@@ -14,7 +14,7 @@ OBJS = main.o \
 	TicTacToeRealPlayer.o
 
 CC = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -O3
+CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3
 DFLAGS = -fsanitize=address -fsanitize=undefined
 
 all: $(TARGET)
