@@ -12,6 +12,7 @@ public:
 		int row, col;
 		TicTacToe::TicTacToeAction action;
 		UltimateTicTacToeAction(int row, int col, const TicTacToe::TicTacToeAction& action);
+		bool equals(const sp<Action>& o) const override;
 	};
 
 	bool isTerminal() const override;

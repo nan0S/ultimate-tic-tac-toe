@@ -4,14 +4,15 @@ OBJS = main.o \
 	Common.o \
 	State.o \
 	Action.o \
-	Player.o \
-	RandomPlayer.o \
+	Agent.o \
+	RandomAgent.o \
 	TicTacToe.o \
 	UltimateTicTacToe.o \
 	GameRunner.o \
 	StatSystem.o \
-	FlatMCTSPlayer.o \
-	TicTacToeRealPlayer.o
+	FlatMCTSAgent.o \
+	TicTacToeRealAgent.o
+	# MCTSAgent.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3

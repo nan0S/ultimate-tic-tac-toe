@@ -9,7 +9,7 @@
 
 class FlatMCTSPlayer : public Player {
 public:
-	FlatMCTSPlayer(const int numberOfIters = 100);
+	FlatMCTSPlayer(const int numberOfIters = 200);
 	sp<Action> getAction(const up<State>& state);
 	
 	struct ActionStats {

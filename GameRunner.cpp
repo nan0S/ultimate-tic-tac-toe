@@ -5,6 +5,7 @@
 #include "RandomPlayer.hpp"
 #include "FlatMCTSPlayer.hpp"
 #include "TicTacToeRealPlayer.hpp"
+#include "MCTSPlayer.hpp"
 
 void GameRunner::playGames(int numberOfGames, bool verbose) {
 	statSystem.reset();
@@ -18,12 +19,14 @@ void GameRunner::playGame(bool verbose) {
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Player> players[] {
 		std::mksh<FlatMCTSPlayer>(200),
+		// std::mksh<MCTSPlayer>(game),
 		std::mksh<RandomPlayer>()
 	};
 
+	int playerCount = sizeof(players) / sizeof(players[0]);
+
 	static bool firstGame = true;
 	if (firstGame) {
-		int playerCount = sizeof(players) / sizeof(players[0]);
 		for (int i = 0; i < playerCount; ++i)
 			statSystem.addDesc("PLAYER" + std::to_string(i), players[i]->getDesc());
 		firstGame = false;
@@ -36,6 +39,10 @@ void GameRunner::playGame(bool verbose) {
 	while (!game->isTerminal()) {
 		auto& player = players[turn];
 		sp<Action> action = player->getAction(game);
+	
+		for (int i = 0; i < playerCount; ++i)
+			players[i]->recordAction(action);
+
 		game->apply(action);
 		turn ^= 1;
 

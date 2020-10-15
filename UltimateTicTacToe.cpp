@@ -131,7 +131,7 @@ bool UltimateTicTacToe::isValid(const sp<Action>& act) {
 
 void UltimateTicTacToe::record() {
 	assert(!recording);
-	recordedTurn = turn == TicTacToe::PLAYER1 ? TicTacToe::PLAYER2 : TicTacToe::PLAYER1;
+	recordedTurn = turn;
 	recording = true;
 }
 
@@ -208,4 +208,11 @@ std::string UltimateTicTacToe::getWinnerName() const {
 			return "";
 	}
 	assert(false);
+}
+
+bool UltimateTicTacToeAction::equals(const sp<Action>& o) const {
+	auto oo = std::dynamic_pointer_cast<UltimateTicTacToeAction>(o);
+	assert(oo);
+	return row == oo->row && col == oo->col &&
+		action.row == oo->action.row && action.col == oo->action.col;
 }

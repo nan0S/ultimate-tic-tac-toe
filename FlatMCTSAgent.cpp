@@ -25,13 +25,18 @@ sp<Action> FlatMCTSPlayer::getAction(const up<State>& state) {
 	for (int i = 0; i < numberOfIters; ++i) {
           int randActionIdx = Random::rand(actionsNum);
 
-          auto nState = state->applyCopy(validActions[randActionIdx]);
+		auto nState = state->clone();
 		nState->record();
+		nState->apply(validActions[randActionIdx]);
+		// auto nState = state->applyCopy(validActions[randActionIdx]);
 
 		int consActionsIdx = 0;
 		std::shuffle(perm, perm + actionsNum, Random::rng);
 		
 		while (!nState->isTerminal()) {
+			// we assume that in initialState we get all valid actions which will become invalid
+			// after some actions are done, but no other will come
+			// it's not in general but in UltimateTicTacToe it's true
 			while (!nState->isValid(validActions[perm[consActionsIdx]])) {
 				++consActionsIdx;
 				assert(consActionsIdx < actionsNum);
