@@ -2,6 +2,14 @@
 Reapeats:       10000
 Total time:     597484.24 ms
 Avg time:       59.748 ms
-Player O:       3.29%
-Player X:       95.79%
+
+AGENT0:
+   FLAT MCTS player.
+   Number of MCTS iterations: 200.
+
+AGENT1:
+   Random player with uniform distribution.
+
+AGENT0 / AgentX:	95.79%
+AGENT1 / AGENTO:	3.29%
 

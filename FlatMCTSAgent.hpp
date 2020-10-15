@@ -1,16 +1,18 @@
-#ifndef FLAT_MCTS_PLAYER_HPP
-#define FLAT_MCTS_PLAYER_HPP
+#ifndef FLAT_MCTS_AGENT_HPP
+#define FLAT_MCTS_AGENT_HPP
 
-#include "Player.hpp"
+#include "Agent.hpp"
+#include "State.hpp"
 #include "Common.hpp"
 #include "Action.hpp"
 
 #include <vector>
 
-class FlatMCTSPlayer : public Player {
+class FlatMCTSAgent : public Agent {
 public:
-	FlatMCTSPlayer(const int numberOfIters = 200);
-	sp<Action> getAction(const up<State>& state);
+	FlatMCTSAgent(AgentID id, const int numberOfIters = 200);
+	sp<Action> getAction(const up<State>& state) override;
+	std::map<std::string, std::string> getDesc() const override;
 	
 	struct ActionStats {
 		int winCount = 0;
@@ -18,11 +20,9 @@ public:
 		bool operator<(const ActionStats& o) const;
 	};
 
-	std::map<std::string, std::string> getDesc() const override;
-
 private:
 	const int numberOfIters;
 	std::vector<ActionStats> stats;
 };
 
-#endif /* MCTS_PLAYER_HPP */
+#endif /* MCTS_AGENT_HPP */

@@ -1,22 +1,36 @@
-#include "MCTSPlayer.hpp"
+#include "MCTSAgent.hpp"
 
 #include <cassert>
 #include <algorithm>
 
-using param_t = MCTSPlayer::param_t;
-using reward_t = MCTSPlayer::reward_t;
+using param_t = MCTSAgent::param_t;
+using reward_t = MCTSAgent::reward_t;
 
-MCTSPlayer::MCTSPlayer(const up<State>& initialState, param_t exploreSpeed, int numberOfIters)
-	: numberOfIters(numberOfIters), exploreSpeed(exploreSpeed), root(std::mksh<MCTSNode>(initialState)) {
+MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
+		param_t exploreSpeed, int numberOfIters) :
+	Agent(id), numberOfIters(numberOfIters),
+	exploreSpeed(exploreSpeed), root(std::mksh<MCTSNode>(initialState)) {
 
 }
 
-MCTSPlayer::MCTSNode::MCTSNode(const up<State>& initialState)
+MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 	: state(initialState->clone()), actions(state->getValidActions()) {
 
 }
 
-sp<Action> MCTSPlayer::getAction(const up<State>& state) {
+// #include "UltimateTicTacToe.hpp"
+
+sp<Action> MCTSAgent::getAction(const up<State>& state) {
+	// UltimateTicTacToe* tic = dynamic_cast<UltimateTicTacToe*>(state.get());
+	// UltimateTicTacToe* tac = dynamic_cast<UltimateTicTacToe*>(root->state.get());
+	// assert(tic);
+	// assert(tac);
+	// for (int i = 0; i < 3; ++i)
+		// for (int j = 0; j < 3; ++j)
+			// for (int k = 0; k < 3; ++k)
+				// for (int l = 0; l < 3; ++l)
+					// assert(tic->board[i][j].board[k][l] == tac->board[i][j].board[k][l]);
+	// assert(tic->turn == tac->turn);
 	for (int i = 0; i < numberOfIters; ++i) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
@@ -25,7 +39,7 @@ sp<Action> MCTSPlayer::getAction(const up<State>& state) {
 	return root->bestAction();	
 }
 
-sp<MCTSPlayer::MCTSNode> MCTSPlayer::treePolicy() {
+sp<MCTSAgent::MCTSNode> MCTSAgent::treePolicy() {
 	auto currentNode = root;
 	descended = 0;
 	while (!currentNode->isTerminal()) {
@@ -37,21 +51,21 @@ sp<MCTSPlayer::MCTSNode> MCTSPlayer::treePolicy() {
 	return currentNode;
 }
 
-bool MCTSPlayer::MCTSNode::isTerminal() const {
+bool MCTSAgent::MCTSNode::isTerminal() const {
 	return state->isTerminal();
 }
 
-bool MCTSPlayer::MCTSNode::shouldExpand() const {
+bool MCTSAgent::MCTSNode::shouldExpand() const {
 	return nextActionToResolveIdx < int(actions.size());
 }
 
-sp<MCTSPlayer::MCTSNode> MCTSPlayer::expand(const sp<MCTSNode>& node) {
+sp<MCTSAgent::MCTSNode> MCTSAgent::expand(const sp<MCTSNode>& node) {
 	auto newNode = node->expand();
 	newNode->parent = node;
 	return newNode;
 }
 
-sp<MCTSPlayer::MCTSNode> MCTSPlayer::MCTSNode::expand() {
+sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::expand() {
 	assert(nextActionToResolveIdx == int(children.size()));
 	assert(nextActionToResolveIdx < int(actions.size()));
 	const auto& action = actions[nextActionToResolveIdx++];
@@ -59,12 +73,12 @@ sp<MCTSPlayer::MCTSNode> MCTSPlayer::MCTSNode::expand() {
 	return children.back();
 }
 
-MCTSPlayer::MCTSNode::MCTSNode(up<State>&& initialState)
+MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
 	: state(std::move(initialState)), actions(state->getValidActions()) {
 
 }
 
-sp<MCTSPlayer::MCTSNode> MCTSPlayer::MCTSNode::selectChild(param_t exploreSpeed) {
+sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::selectChild(param_t exploreSpeed) {
 	assert(!children.empty());
 	return *std::max_element(children.begin(), children.end(),
 			[&exploreSpeed, this](const auto& ch1, const auto& ch2){
@@ -72,15 +86,16 @@ sp<MCTSPlayer::MCTSNode> MCTSPlayer::MCTSNode::selectChild(param_t exploreSpeed)
 	});
 }
 
-param_t MCTSPlayer::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
+param_t MCTSAgent::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
 	return param_t(v->stats.score) / v->stats.visits +
 		c * std::sqrt(2 * std::log(stats.visits) / v->stats.visits);
 }
 
-int MCTSPlayer::defaultPolicy(const sp<MCTSNode>& initialNode) {
+int MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
-	state->record();
 	auto actions = state->getValidActions();
+	std::shuffle(actions.begin(), actions.end(), Random::rng);
+
      int actionIdx = 0;
      while (!state->isTerminal()) {
 		// we assume that in initialState we get all valid actions which will become invalid
@@ -93,14 +108,14 @@ int MCTSPlayer::defaultPolicy(const sp<MCTSNode>& initialNode) {
 		const auto& action = actions[actionIdx];
 		state->apply(action);
 	}
-	return state->didWon();
+	return state->didWin(getID());
 }
 
-up<State> MCTSPlayer::MCTSNode::cloneState() {
+up<State> MCTSAgent::MCTSNode::cloneState() {
 	return state->clone();
 }
 
-void MCTSPlayer::backup(sp<MCTSNode> node, reward_t delta) {
+void MCTSAgent::backup(sp<MCTSNode> node, reward_t delta) {
 	int ascended = 0;
 	while (node) {
 		node->addReward(delta);
@@ -110,12 +125,12 @@ void MCTSPlayer::backup(sp<MCTSNode> node, reward_t delta) {
 	assert(descended + 1 == ascended);
 }
 
-void MCTSPlayer::MCTSNode::addReward(reward_t delta) {
+void MCTSAgent::MCTSNode::addReward(reward_t delta) {
 	stats.score += delta;
 	++stats.visits;
 }
 
-sp<Action> MCTSPlayer::MCTSNode::bestAction() {
+sp<Action> MCTSAgent::MCTSNode::bestAction() {
 	int bestChildIdx = std::max_element(children.begin(), children.end(),
 			[](const auto& ch1, const auto& ch2){
 		return *ch1 < *ch2;
@@ -124,15 +139,15 @@ sp<Action> MCTSPlayer::MCTSNode::bestAction() {
 	return actions[bestChildIdx];
 }
 
-// bool MCTSPlayer::MCTSNode::operator<(const MCTSNode& o) const {
+// bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
 	// return stats.visits < o.stats.visits;
 // }
-bool MCTSPlayer::MCTSNode::operator<(const MCTSNode& o) const {
+bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
 	return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
 }
 // #include "UltimateTicTacToe.hpp"
 
-void MCTSPlayer::recordAction(const sp<Action>& action) {
+void MCTSAgent::recordAction(const sp<Action>& action) {
 	auto recordActionIdx = std::find_if(root->actions.begin(), root->actions.end(),
 			[&action](const auto& x){
 		return action->equals(x);
@@ -154,8 +169,8 @@ void MCTSPlayer::recordAction(const sp<Action>& action) {
 	assert(!root->parent.lock());
 }
 
-std::map<std::string, std::string> MCTSPlayer::getDesc() const {
-	return { { "MCTS Player with UCT selection and random simulation policy.", "" },
+std::map<std::string, std::string> MCTSAgent::getDesc() const {
+	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
 		{ "Number of iterations", std::to_string(numberOfIters) },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
 	};

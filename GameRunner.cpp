@@ -2,10 +2,10 @@
 
 #include "Common.hpp"
 #include "UltimateTicTacToe.hpp"
-#include "RandomPlayer.hpp"
-#include "FlatMCTSPlayer.hpp"
-#include "TicTacToeRealPlayer.hpp"
-#include "MCTSPlayer.hpp"
+#include "RandomAgent.hpp"
+#include "FlatMCTSAgent.hpp"
+#include "TicTacToeRealAgent.hpp"
+#include "MCTSAgent.hpp"
 
 void GameRunner::playGames(int numberOfGames, bool verbose) {
 	statSystem.reset();
@@ -16,19 +16,20 @@ void GameRunner::playGames(int numberOfGames, bool verbose) {
 
 void GameRunner::playGame(bool verbose) {
 	announceGameStart();
-	up<State> game = std::mku<UltimateTicTacToe>();
-	sp<Player> players[] {
-		std::mksh<FlatMCTSPlayer>(200),
-		// std::mksh<MCTSPlayer>(game),
-		std::mksh<RandomPlayer>()
-	};
 
-	int playerCount = sizeof(players) / sizeof(players[0]);
+	up<State> game = std::mku<UltimateTicTacToe>();
+	sp<Agent> agents[] {
+		// std::mksh<FlatMCTSAgent>(AGENT1, 200),
+		// std::mksh<RandomAgent>(AGENT2)
+		std::mksh<MCTSAgent>(AGENT1, game),
+		std::mksh<RandomAgent>(AGENT2)
+	};
+	int agentCount = sizeof(agents) / sizeof(agents[0]);
 
 	static bool firstGame = true;
 	if (firstGame) {
-		for (int i = 0; i < playerCount; ++i)
-			statSystem.addDesc("PLAYER" + std::to_string(i), players[i]->getDesc());
+		for (int i = 0; i < agentCount; ++i)
+			statSystem.addDesc("AGENT" + std::to_string(i + 1), agents[i]->getDesc());
 		firstGame = false;
 	}
 
@@ -37,11 +38,11 @@ void GameRunner::playGame(bool verbose) {
 
 	int turn = 0; 
 	while (!game->isTerminal()) {
-		auto& player = players[turn];
-		sp<Action> action = player->getAction(game);
+		auto& agent = agents[turn];
+		sp<Action> action = agent->getAction(game);
 	
-		for (int i = 0; i < playerCount; ++i)
-			players[i]->recordAction(action);
+		for (int i = 0; i < agentCount; ++i)
+			agents[i]->recordAction(action);
 
 		game->apply(action);
 		turn ^= 1;
@@ -49,6 +50,7 @@ void GameRunner::playGame(bool verbose) {
 		if (verbose)
 			std::cout << *game << '\n';
 	}
+
 	announceGameEnd(game->getWinnerName());
 }
 

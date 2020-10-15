@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "Agent.hpp"
+
 class TicTacToe {
 public:
 	TicTacToe();
@@ -13,24 +15,22 @@ public:
 		TicTacToeAction(int row, int col);
 	};
 
-	enum PlayerTurn { NONE = -1, PLAYER1, PLAYER2 };
-
 	bool isTerminal() const;
-	void apply(PlayerTurn turn, const TicTacToeAction& action);
+	void apply(AgentID turn, const TicTacToeAction& action);
 
 	void printLineSep(std::ostream& out) const;
 	void printRow(std::ostream& out, int row) const;
 
-	PlayerTurn getWinner() const;
+	AgentID getWinner() const;
 
 	bool isLegal(const TicTacToeAction& action) const;
 	bool isEmpty(int i, int j) const;
 
-private:
 	static constexpr int BOARD_SIZE = 3;
 	static_assert(BOARD_SIZE > 0, "Board Size has to be positive");
+	AgentID board[BOARD_SIZE][BOARD_SIZE];
+private:
 
-	PlayerTurn board[BOARD_SIZE][BOARD_SIZE];
 	int emptyCells = BOARD_SIZE * BOARD_SIZE;
 
 	bool isRowDone(int row) const;

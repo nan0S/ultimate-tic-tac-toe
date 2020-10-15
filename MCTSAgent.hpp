@@ -1,15 +1,16 @@
-#ifndef MCTS_PLAYER_HPP
-#define MCTS_PLAYER_HPP
+#ifndef MCTS_AGENT_HPP
+#define MCTS_AGENT_HPP
 
-#include "Player.hpp"
+#include "Agent.hpp"
+#include "State.hpp"
 
-class MCTSPlayer : public Player {
+class MCTSAgent : public Agent {
 public:
 	using param_t = double;
 	using reward_t = int;
 
-  	MCTSPlayer(const up<State> &initialState, param_t exploreSpeed = 1.0,
-             int numberOfIters = 1000);
+  	MCTSAgent(AgentID id, const up<State> &initialState,
+			param_t exploreSpeed = 1.0, int numberOfIters = 1000);
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::map<std::string, std::string> getDesc() const override;
@@ -53,7 +54,7 @@ private:
 	void backup(sp<MCTSNode> node, reward_t delta);
 };
 
-#endif /* MCTS_PLAYER_HPP */
+#endif /* MCTS_AGENT_HPP */
 
 /*
  * node reprezentuje stan

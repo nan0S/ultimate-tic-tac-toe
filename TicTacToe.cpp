@@ -32,7 +32,7 @@ bool TicTacToe::isTerminal() const {
 	return isDiag1Done() || isDiag2Done();
 }
 
-void TicTacToe::apply(PlayerTurn turn, const TicTacToeAction& action) {
+void TicTacToe::apply(AgentID turn, const TicTacToeAction& action) {
 	PROFILE_FUNCTION();
 
 	assert(isLegal(action));
@@ -43,16 +43,16 @@ void TicTacToe::apply(PlayerTurn turn, const TicTacToeAction& action) {
 bool TicTacToe::isRowDone(int row) const {
 	PROFILE_FUNCTION();
 
-	PlayerTurn val =  board[row][0];
+	AgentID val =  board[row][0];
 	return val != NONE && 
 		std::all_of(board[row], board[row] + BOARD_SIZE,
-				  [&val](const PlayerTurn& p){ return p == val; });
+				  [&val](const AgentID& p){ return p == val; });
 }
 
 bool TicTacToe::isColDone(int col) const {
 	PROFILE_FUNCTION();
 
-	PlayerTurn val =  board[0][col];
+	AgentID val =  board[0][col];
 	if (val == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
@@ -64,7 +64,7 @@ bool TicTacToe::isColDone(int col) const {
 bool TicTacToe::isDiag1Done() const {
 	PROFILE_FUNCTION();
 
-	PlayerTurn val = board[0][0];
+	AgentID val = board[0][0];
 	if (val == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
@@ -76,7 +76,7 @@ bool TicTacToe::isDiag1Done() const {
 bool TicTacToe::isDiag2Done() const {
 	PROFILE_FUNCTION();
 
-	PlayerTurn val = board[0][BOARD_SIZE - 1];
+	AgentID val = board[0][BOARD_SIZE - 1];
 	if (val == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
@@ -105,7 +105,7 @@ bool TicTacToe::isInRange(int idx) const {
 	return 0 <= idx && idx < BOARD_SIZE;
 }
 
-TicTacToe::PlayerTurn TicTacToe::getWinner() const {
+AgentID TicTacToe::getWinner() const {
 	PROFILE_FUNCTION();
 
 	for (int i = 0; i < BOARD_SIZE; ++i) {
@@ -142,23 +142,27 @@ char TicTacToe::getCharAt(int row, int col) const {
 
 char TicTacToe::getCharAtTerminal(int row, int col) const {
 	auto winner = getWinner();
-	if (winner == PLAYER1)
-		return isOnDiag1(row, col) || 
-			  isOnDiag2(row, col) ?
-			  'X' : ' ';
-	else if (winner == PLAYER2)
-		return isOnSide(row, col) ||
-			  isOnTop(row, col) ?
-			  'O' : ' ';
-	return convertSymbolAt(row, col);
+	switch (winner) {
+		case AGENT1:
+			return isOnDiag1(row, col) || 
+				  isOnDiag2(row, col) ?
+				  'X' : ' ';
+		case AGENT2:
+			return isOnSide(row, col) ||
+				  isOnTop(row, col) ?
+				  'O' : ' ';
+		case NONE:
+			return convertSymbolAt(row, col);
+	}
+	assert(false);
 }
 
 char TicTacToe::convertSymbolAt(int row, int col) const {
 	const auto symbol = board[row][col];
 	switch (symbol) {
-		case PLAYER1:
+		case AGENT1:
 			return 'X';
-		case PLAYER2:
+		case AGENT2:
 			return 'O';
 		case NONE:
 			return ' ';
@@ -174,10 +178,10 @@ bool TicTacToe::isOnDiag2(int row, int col) const {
 	return row + col == BOARD_SIZE - 1;
 }
 
-bool TicTacToe::isOnSide(int row, int col) const {
+bool TicTacToe::isOnSide(int, int col) const {
 	return col == 0 || col == BOARD_SIZE - 1;
 }
 
-bool TicTacToe::isOnTop(int row, int col) const {
+bool TicTacToe::isOnTop(int row, int) const {
 	return row == 0 || row == BOARD_SIZE - 1;
 }

@@ -2,6 +2,13 @@
 Reapeats:	100000
 Total time:	19993.78 ms
 Avg time:	0.200 ms
-Player O:	37.49%
-Player X:	41.60%
+
+AGENT0:
+   Random player with uniform distribution.
+
+AGENT1:
+   Random player with uniform distribution.
+
+AGENT0 / AgentX:	37.49%
+AGENT1 / AGENTO:	41.60%
 

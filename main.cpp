@@ -41,9 +41,9 @@ void parseArgs(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
 
-	// std::ios_base::sync_with_stdio(false);
-	// std::cout.tie(0);
-	// std::cin.tie(0);
+	std::ios_base::sync_with_stdio(false);
+	std::cout.tie(0);
+	std::cin.tie(0);
 
 	parseArgs(argc, argv);
 	GameRunner().playGames(numberOfGames, verboseFlag);

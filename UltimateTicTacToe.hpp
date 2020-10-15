@@ -9,21 +9,23 @@
 class UltimateTicTacToe : public State {
 public:
 	struct UltimateTicTacToeAction : public Action {
+		UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
+				const TicTacToe::TicTacToeAction& action);
+		bool equals(const sp<Action>& o) const override;
+
+		AgentID agentID;
 		int row, col;
 		TicTacToe::TicTacToeAction action;
-		UltimateTicTacToeAction(int row, int col, const TicTacToe::TicTacToeAction& action);
-		bool equals(const sp<Action>& o) const override;
 	};
 
 	bool isTerminal() const override;
 	void apply(const sp<Action>& act) override;
 
 	std::vector<sp<Action>> getValidActions() override;
-	bool isValid(const sp<Action>& act) override;
+	bool isValid(const sp<Action>& act) const override;
 
-	void record() override;
-	bool didWon() override;
 	up<State> clone() override;
+	bool didWin(AgentID id) const override; 
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;
@@ -33,12 +35,9 @@ public:
 	static constexpr int BOARD_SIZE = 3;
 	static_assert(BOARD_SIZE > 0, "Board size has to be positive");
 
-private:
-	bool recording = false;
-	TicTacToe::PlayerTurn recordedTurn;
-
-	TicTacToe::PlayerTurn turn = TicTacToe::PLAYER1;
 	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
+	AgentID turn = AGENT1;
+private:
 
 	bool isAllTerminal() const;
 	bool isRowDone(int row) const;
@@ -47,8 +46,9 @@ private:
 	bool isDiag2Done() const;
 
 	bool isInRange(int idx) const;
+	bool canMove(AgentID agentID) const;
 
-	TicTacToe::PlayerTurn getWinner() const;
+	AgentID getWinner() const;
 
 	void printLineSep(std::ostream& out) const;
 	void printRow(std::ostream& out, int i) const;

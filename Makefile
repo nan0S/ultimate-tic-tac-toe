@@ -11,22 +11,23 @@ OBJS = main.o \
 	GameRunner.o \
 	StatSystem.o \
 	FlatMCTSAgent.o \
-	TicTacToeRealAgent.o
-	# MCTSAgent.o
+	TicTacToeRealAgent.o \
+	MCTSAgent.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3
 DFLAGS = -fsanitize=address -fsanitize=undefined
+RFLAGS = -Ofast -DNDEBUG
 
 all: $(TARGET)
 
 install: $(TARGET) clean
 
+release: CXXFLAGS += $(RFLAGS)
+release: $(TARGET)
+
 debug: CXXFLAGS += $(DFLAGS)
 debug: $(TARGET)
-
-nodebug: CXXFLAGS += -DNDEBUG
-nodebug: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CXXFLAGS) -o $(EXENAME) $^

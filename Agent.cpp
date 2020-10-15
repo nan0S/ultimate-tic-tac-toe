@@ -1,9 +1,17 @@
-#include "Player.hpp"
+#include "Agent.hpp"
 
-std::map<std::string, std::string> Player::getDesc() const {
+Agent::Agent(AgentID id) : id(id) {
+
+}
+
+AgentID Agent::getID() const {
+	return id;
+}
+
+std::map<std::string, std::string> Agent::getDesc() const {
 	return {};
 }
 
-void Player::recordAction(const sp<Action>& action) {
+void Agent::recordAction(const sp<Action>&) {
 
 }

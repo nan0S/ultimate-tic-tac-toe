@@ -3,6 +3,7 @@
 
 #include "Common.hpp"
 #include "Action.hpp"
+#include "Agent.hpp"
 
 class State {
 public:
@@ -11,11 +12,10 @@ public:
 	up<State> applyCopy(const sp<Action>& action);
 
 	virtual std::vector<sp<Action>> getValidActions() = 0;
-	virtual bool isValid(const sp<Action>& action) = 0;
+	virtual bool isValid(const sp<Action>& action) const = 0;
 
 	virtual up<State> clone() = 0;
-	virtual void record() = 0;
-	virtual bool didWon() = 0;
+	virtual bool didWin(AgentID id) const = 0;
 
 	virtual std::ostream& print(std::ostream& out) const = 0;
 	friend std::ostream& operator<<(std::ostream& out, const State& state);

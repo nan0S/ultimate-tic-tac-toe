@@ -1,19 +1,21 @@
-#include "FlatMCTSPlayer.hpp"
+#include "FlatMCTSAgent.hpp"
 
 #include "Common.hpp"
 
 #include <cassert>
 #include <algorithm>
 
-using ActionStats = FlatMCTSPlayer::ActionStats;
+using ActionStats = FlatMCTSAgent::ActionStats;
 
-FlatMCTSPlayer::FlatMCTSPlayer(int numberOfIters) : numberOfIters(numberOfIters) {
+FlatMCTSAgent::FlatMCTSAgent(AgentID id, int numberOfIters) : 
+	Agent(id), numberOfIters(numberOfIters) {
 
 }
 
-sp<Action> FlatMCTSPlayer::getAction(const up<State>& state) {
+sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 	auto validActions = state->getValidActions();
 	assert(!validActions.empty());
+	std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 
 	int actionsNum = static_cast<int>(validActions.size());
 	stats.resize(actionsNum);
@@ -23,16 +25,11 @@ sp<Action> FlatMCTSPlayer::getAction(const up<State>& state) {
 	std::iota(perm, perm + actionsNum, 0);
 	
 	for (int i = 0; i < numberOfIters; ++i) {
-          int randActionIdx = Random::rand(actionsNum);
-
-		auto nState = state->clone();
-		nState->record();
-		nState->apply(validActions[randActionIdx]);
-		// auto nState = state->applyCopy(validActions[randActionIdx]);
-
-		int consActionsIdx = 0;
 		std::shuffle(perm, perm + actionsNum, Random::rng);
-		
+		int randActionIdx = perm[0];
+		int consActionsIdx = 1;
+		auto nState = state->applyCopy(validActions[randActionIdx]);
+
 		while (!nState->isTerminal()) {
 			// we assume that in initialState we get all valid actions which will become invalid
 			// after some actions are done, but no other will come
@@ -46,7 +43,7 @@ sp<Action> FlatMCTSPlayer::getAction(const up<State>& state) {
 		}
 
 		++stats[randActionIdx].total;
-		if (nState->didWon())
+		if (nState->didWin(getID()))
 			++stats[randActionIdx].winCount;
 	}
 
@@ -58,8 +55,8 @@ bool ActionStats::operator<(const ActionStats& o) const {
 	return 1ll * winCount * o.total < 1ll * o.winCount * total;
 }
 
-std::map<std::string, std::string> FlatMCTSPlayer::getDesc() const {
-	return { { "Flat MCTS player.", "" },
+std::map<std::string, std::string> FlatMCTSAgent::getDesc() const {
+	return { { "Flat MCTS agent.", "" },
 		{ "Number of MCTS iterations", std::to_string(numberOfIters) }
 	};
 }

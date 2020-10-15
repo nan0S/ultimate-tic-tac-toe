@@ -5,9 +5,9 @@
 
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
 
-UltimateTicTacToeAction::UltimateTicTacToeAction(int row, int col,
+UltimateTicTacToeAction::UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 		const TicTacToe::TicTacToeAction& action) :
-	row(row), col(col), action(action) {
+	agentID(agentID), row(row), col(col), action(action) {
 	PROFILE_FUNCTION();
 }
 						
@@ -36,7 +36,7 @@ bool UltimateTicTacToe::isRowDone(int row) const {
 	PROFILE_FUNCTION();
 
 	const auto winner = board[row][0].getWinner();
-	if (winner == TicTacToe::NONE)
+	if (winner == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
 		if (board[row][i].getWinner() != winner)
@@ -48,7 +48,7 @@ bool UltimateTicTacToe::isColDone(int col) const {
 	PROFILE_FUNCTION();
 
 	const auto winner = board[0][col].getWinner();
-	if (winner == TicTacToe::NONE)
+	if (winner == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
 		if (board[i][col].getWinner() != winner)
@@ -60,7 +60,7 @@ bool UltimateTicTacToe::isDiag1Done() const {
 	PROFILE_FUNCTION();
 
 	const auto winner = board[0][0].getWinner();
-	if (winner == TicTacToe::NONE)
+	if (winner == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
 		if (board[i][i].getWinner() != winner)
@@ -72,7 +72,7 @@ bool UltimateTicTacToe::isDiag2Done() const {
 	PROFILE_FUNCTION();
 
 	const auto winner = board[0][BOARD_SIZE - 1].getWinner();
-	if (winner == TicTacToe::NONE)
+	if (winner == NONE)
 		return false;
 	for (int i = 1; i < BOARD_SIZE; ++i)
 		if (board[i][BOARD_SIZE - 1 - i].getWinner() != winner)
@@ -87,15 +87,20 @@ void UltimateTicTacToe::apply(const sp<Action>& act) {
 	assert(action);
 	assert(isLegal(action));
 	board[action->row][action->col].apply(turn, action->action);
-	turn = turn == TicTacToe::PLAYER1 ? TicTacToe::PLAYER2 : TicTacToe::PLAYER1;
+	turn = turn == AGENT1 ? AGENT2 : AGENT1;
 }
 
 bool UltimateTicTacToe::isLegal(const sp<UltimateTicTacToeAction>& action) const {
 	PROFILE_FUNCTION();
 
-	return isInRange(action->row) &&
+	return canMove(action->agentID) &&
+		  isInRange(action->row) &&
 		  isInRange(action->col) &&
 		  board[action->row][action->col].isLegal(action->action);
+}
+
+bool UltimateTicTacToe::canMove(AgentID agentID) const {
+	return agentID == NONE || agentID == turn;
 }
 
 bool UltimateTicTacToe::isInRange(int idx) const {
@@ -117,35 +122,27 @@ std::vector<sp<Action>> UltimateTicTacToe::getValidActions() {
 				for (int l = 0; l < BOARD_SIZE; ++l)
 					if (cell.isEmpty(k, l))
 						validActions.push_back(std::mksh<UltimateTicTacToeAction>(
-							i, j, TicTacToe::TicTacToeAction(k, l)));
+							NONE, i, j, TicTacToe::TicTacToeAction(k, l)));
 		}
-	std::shuffle(validActions.begin(), validActions.end(), Random::rng);
+	// std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 	return validActions;
 }
 
-bool UltimateTicTacToe::isValid(const sp<Action>& act) {
+bool UltimateTicTacToe::isValid(const sp<Action>& act) const {
 	const auto& action = std::dynamic_pointer_cast<UltimateTicTacToeAction>(act);
 	assert(action);
 	return isLegal(action);
 }
 
-void UltimateTicTacToe::record() {
-	assert(!recording);
-	recordedTurn = turn;
-	recording = true;
-}
-
-bool UltimateTicTacToe::didWon() {
-	assert(recording);
-	recording = false;
-	return recordedTurn == getWinner();
+bool UltimateTicTacToe::didWin(AgentID id) const {
+	return id == getWinner();
 }
 
 up<State> UltimateTicTacToe::clone() {
 	return up<State>(new UltimateTicTacToe(*this));
 }
 
-TicTacToe::PlayerTurn UltimateTicTacToe::getWinner() const {
+AgentID UltimateTicTacToe::getWinner() const {
 	PROFILE_FUNCTION();
 
 	for (int i = 0; i < BOARD_SIZE; ++i) {
@@ -159,7 +156,7 @@ TicTacToe::PlayerTurn UltimateTicTacToe::getWinner() const {
 	if (isDiag2Done())
 		return board[0][BOARD_SIZE - 1].getWinner();
 	assert(isAllTerminal());
-	return TicTacToe::NONE; 
+	return NONE; 
 }
 
 std::ostream& UltimateTicTacToe::print(std::ostream& out) const {
@@ -200,11 +197,11 @@ std::string UltimateTicTacToe::getWinnerName() const {
 	assert(isTerminal());
 	const auto winner = getWinner();
 	switch (winner) {
-		case TicTacToe::PLAYER1:
-			return "PLAYER0 / PlayerX";
-		case TicTacToe::PLAYER2:
-			return "PLAYER1 / PlayerO";
-		case TicTacToe::NONE:
+		case AGENT1:
+			return "AGENT1 / Player X";
+		case AGENT2:
+			return "AGENT2 / Player O";
+		case NONE:
 			return "";
 	}
 	assert(false);
