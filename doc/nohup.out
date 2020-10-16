@@ -1,0 +1,18 @@
+Rc files read:
+  NONE
+Latexmk: This is Latexmk, John Collins, 17 Apr. 2020, version: 4.69a.
+Viewing pdf
+======= Need to update make_preview_continuous for target files
+Latexmk: I have not found a previewer that is already running. 
+   So I will start it for 'raport.pdf'
+------------
+------------
+Running 'start start acroread  "raport.pdf"'
+------------
+Latexmk: All targets (raport.pdf) are up-to-date
+For rule 'view', running '&if_source(  )' ...
+sh: acroread: command not found
+
+=== Watching for updated files. Use ctrl/C to stop ...
+Latexmk: User typed ctrl/C or ctrl/break.  I'll finish.
+qt.qpa.xcb: QXcbConnection: XCB error: 5 (BadAtom), sequence: 1168, resource id: 0, major code: 20 (GetProperty), minor code: 0

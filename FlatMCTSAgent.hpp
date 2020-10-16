@@ -10,7 +10,7 @@
 
 class FlatMCTSAgent : public Agent {
 public:
-	FlatMCTSAgent(AgentID id, const int numberOfIters = 200);
+	FlatMCTSAgent(AgentID id, const int numberOfIters=100);
 	sp<Action> getAction(const up<State>& state) override;
 	std::map<std::string, std::string> getDesc() const override;
 	

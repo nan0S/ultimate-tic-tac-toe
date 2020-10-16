@@ -1,0 +1,37 @@
+#!/bin/sh
+
+DEPS=(
+	Common.hpp
+	Common.cpp
+	Action.hpp
+	Action.cpp
+	Agent.hpp
+	Agent.cpp
+	State.hpp
+	State.cpp
+	StatSystem.hpp
+	StatSystem.cpp
+	RandomAgent.hpp
+	RandomAgent.cpp
+	FlatMCTSAgent.hpp
+	FlatMCTSAgent.cpp
+	MCTSAgent.hpp
+	MCTSAgent.cpp
+	TicTacToe.hpp
+	TicTacToe.cpp
+	UltimateTicTacToe.hpp
+	UltimateTicTacToe.cpp
+	TicTacToeRealAgent.hpp
+	TicTacToeRealAgent.cpp
+	GameRunner.hpp
+	GameRunner.cpp
+	CGAgent.hpp
+	CGAgent.cpp
+	CGRunner.hpp
+	CGRunner.cpp
+	main.cpp
+)
+
+# echo "${DEPS[@]}"
+cat "${DEPS[@]}" > merged.cpp
+sed -i -e '/HPP/d' -e '/include "/d' merged.cpp

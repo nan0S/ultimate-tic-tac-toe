@@ -7,7 +7,7 @@ using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		param_t exploreSpeed, int numberOfIters) :
+		int numberOfIters, param_t exploreSpeed) :
 	Agent(id), numberOfIters(numberOfIters),
 	exploreSpeed(exploreSpeed), root(std::mksh<MCTSNode>(initialState)) {
 
@@ -20,7 +20,7 @@ MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 
 // #include "UltimateTicTacToe.hpp"
 
-sp<Action> MCTSAgent::getAction(const up<State>& state) {
+sp<Action> MCTSAgent::getAction(const up<State>&) {
 	// UltimateTicTacToe* tic = dynamic_cast<UltimateTicTacToe*>(state.get());
 	// UltimateTicTacToe* tac = dynamic_cast<UltimateTicTacToe*>(root->state.get());
 	// assert(tic);
@@ -143,7 +143,8 @@ sp<Action> MCTSAgent::MCTSNode::bestAction() {
 	// return stats.visits < o.stats.visits;
 // }
 bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
-	return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
+	// return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
+	return stats.visits < o.stats.visits;
 }
 // #include "UltimateTicTacToe.hpp"
 
@@ -153,14 +154,6 @@ void MCTSAgent::recordAction(const sp<Action>& action) {
 		return action->equals(x);
 	}) - root->actions.begin();
 
-	// const auto& yy = std::dynamic_pointer_cast<UltimateTicTacToe::UltimateTicTacToeAction>(action);
-	// std::cout << yy->row << " " << yy->col << " " << yy->action.row << " " << yy->action.col << std::endl;
-	// std::cout << root->actions.size() << std::endl;
-	// for (const auto& x : root->actions) {
-		// const auto& y = std::dynamic_pointer_cast<UltimateTicTacToe::UltimateTicTacToeAction>(x);
-		// std::cout << y->row << " " << y->col << " " << y->action.row << " " << y->action.col << std::endl;
-	// }
-	// exit(0);
 	assert(recordActionIdx < int(root->actions.size()));
 	if (recordActionIdx < int(root->children.size()))
 		root = root->children[recordActionIdx];

@@ -12,7 +12,9 @@ OBJS = main.o \
 	StatSystem.o \
 	FlatMCTSAgent.o \
 	TicTacToeRealAgent.o \
-	MCTSAgent.o
+	MCTSAgent.o \
+	CGAgent.o \
+	CGRunner.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3

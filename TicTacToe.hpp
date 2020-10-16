@@ -26,10 +26,10 @@ public:
 	bool isLegal(const TicTacToeAction& action) const;
 	bool isEmpty(int i, int j) const;
 
+private:
 	static constexpr int BOARD_SIZE = 3;
 	static_assert(BOARD_SIZE > 0, "Board Size has to be positive");
 	AgentID board[BOARD_SIZE][BOARD_SIZE];
-private:
 
 	int emptyCells = BOARD_SIZE * BOARD_SIZE;
 

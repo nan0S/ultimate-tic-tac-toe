@@ -10,7 +10,7 @@ public:
 	using reward_t = int;
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
-			param_t exploreSpeed = 1.0, int numberOfIters = 1000);
+			int numberOfIters=100, param_t exploreSpeed=1.0);
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::map<std::string, std::string> getDesc() const override;

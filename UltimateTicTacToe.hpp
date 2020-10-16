@@ -35,9 +35,9 @@ public:
 	static constexpr int BOARD_SIZE = 3;
 	static_assert(BOARD_SIZE > 0, "Board size has to be positive");
 
+private:
 	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
 	AgentID turn = AGENT1;
-private:
 
 	bool isAllTerminal() const;
 	bool isRowDone(int row) const;
