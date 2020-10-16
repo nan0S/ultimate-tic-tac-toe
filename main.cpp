@@ -43,12 +43,17 @@ void parseArgs(int argc, char* argv[]) {
 int main(int argc, char* argv[]) {
 
 	std::ios_base::sync_with_stdio(false);
-	// std::cout.tie(0);
-	// std::cin.tie(0);
+#ifdef LOCAL
+	std::cout.tie(0);
+	std::cin.tie(0);
+#endif
 
+#ifdef LOCAL
 	parseArgs(argc, argv);
+	GameRunner().playGames(numberOfGames, verboseFlag);
+#else
 	CGRunner().playGame();
-	// GameRunner().playGames(numberOfGames, verboseFlag);
+#endif
 
 	return 0;
 }

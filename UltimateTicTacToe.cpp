@@ -86,8 +86,15 @@ void UltimateTicTacToe::apply(const sp<Action>& act) {
 	const auto& action = std::dynamic_pointer_cast<UltimateTicTacToeAction>(act);
 	assert(action);
 	assert(isLegal(action));
+
 	board[action->row][action->col].apply(turn, action->action);
 	turn = turn == AGENT1 ? AGENT2 : AGENT1;
+	
+	if (board[action->action.row][action->action.col].isTerminal())
+		lastRow = lastCol = -1;
+	else
+		lastRow = action->action.row,
+		lastCol = action->action.col;
 }
 
 bool UltimateTicTacToe::isLegal(const sp<UltimateTicTacToeAction>& action) const {
@@ -96,6 +103,7 @@ bool UltimateTicTacToe::isLegal(const sp<UltimateTicTacToeAction>& action) const
 	return canMove(action->agentID) &&
 		  isInRange(action->row) &&
 		  isInRange(action->col) &&
+		  properBoard(action->row, action->col) && 
 		  board[action->row][action->col].isLegal(action->action);
 }
 
@@ -109,22 +117,41 @@ bool UltimateTicTacToe::isInRange(int idx) const {
 	return 0 <= idx && idx < BOARD_SIZE;
 }
 
+bool UltimateTicTacToe::properBoard(int boardRow, int boardCol) const {
+	return (lastRow == -1 && lastCol == -1) || 
+		(boardRow == lastRow && boardCol == lastCol);
+}
+
 std::vector<sp<Action>> UltimateTicTacToe::getValidActions() {
 	PROFILE_FUNCTION();
 
 	std::vector<sp<Action>> validActions;
-	for (int i = 0; i < BOARD_SIZE; ++i)
-		for (int j = 0; j < BOARD_SIZE; ++j) {
-			const auto& cell = board[i][j];
-			if (cell.isTerminal())
-				continue;
-			for (int k = 0; k < BOARD_SIZE; ++k)
-				for (int l = 0; l < BOARD_SIZE; ++l)
-					if (cell.isEmpty(k, l))
-						validActions.push_back(std::mksh<UltimateTicTacToeAction>(
-							NONE, i, j, TicTacToe::TicTacToeAction(k, l)));
-		}
-	// std::shuffle(validActions.begin(), validActions.end(), Random::rng);
+
+	if (lastRow == -1 && lastCol == -1) {
+		for (int i = 0; i < BOARD_SIZE; ++i)
+			for (int j = 0; j < BOARD_SIZE; ++j) {
+				const auto& cell = board[i][j];
+				if (cell.isTerminal())
+					continue;
+				for (int k = 0; k < BOARD_SIZE; ++k)
+					for (int l = 0; l < BOARD_SIZE; ++l)
+						if (cell.isEmpty(k, l))
+							validActions.push_back(std::mksh<UltimateTicTacToeAction>(
+								NONE, i, j, TicTacToe::TicTacToeAction(k, l)));
+			}
+	}
+	else {
+		const auto& cell = board[lastRow][lastCol];
+		if (cell.isTerminal())
+			return {};
+		assert(!cell.isTerminal());
+		for (int i = 0; i < BOARD_SIZE; ++i)
+			for (int j = 0; j < BOARD_SIZE; ++j)
+				if (cell.isEmpty(i, j))
+					validActions.push_back(std::mksh<UltimateTicTacToeAction>(
+						NONE, lastRow, lastCol, TicTacToe::TicTacToeAction(i, j)));
+	}
+
 	return validActions;
 }
 

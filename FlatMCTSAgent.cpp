@@ -15,30 +15,33 @@ FlatMCTSAgent::FlatMCTSAgent(AgentID id, int numberOfIters) :
 sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 	auto validActions = state->getValidActions();
 	assert(!validActions.empty());
-	std::shuffle(validActions.begin(), validActions.end(), Random::rng);
+	// std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 
 	int actionsNum = static_cast<int>(validActions.size());
 	stats.resize(actionsNum);
 	std::fill(stats.begin(), stats.end(), ActionStats());
 
-	int perm[actionsNum];
-	std::iota(perm, perm + actionsNum, 0);
+	// int perm[actionsNum];
+	// std::iota(perm, perm + actionsNum, 0);
 	
 	for (int i = 0; i < numberOfIters; ++i) {
-		std::shuffle(perm, perm + actionsNum, Random::rng);
-		int randActionIdx = perm[0];
-		int consActionsIdx = 1;
+		// std::shuffle(perm, perm + actionsNum, Random::rng);
+		// int randActionIdx = perm[0];
+		// int consActionsIdx = 1;
+		int randActionIdx = Random::rand(actionsNum);
 		auto nState = state->applyCopy(validActions[randActionIdx]);
 
 		while (!nState->isTerminal()) {
 			// we assume that in initialState we get all valid actions which will become invalid
 			// after some actions are done, but no other will come
 			// it's not in general but in UltimateTicTacToe it's true
-			while (!nState->isValid(validActions[perm[consActionsIdx]])) {
-				++consActionsIdx;
-				assert(consActionsIdx < actionsNum);
-			}
-			const auto& action = validActions[perm[consActionsIdx]];
+			// while (!nState->isValid(validActions[perm[consActionsIdx]])) {
+				// ++consActionsIdx;
+				// assert(consActionsIdx < actionsNum);
+			// }
+			auto actions = nState->getValidActions();
+			// const auto& action = validActions[perm[consActionsIdx]];
+			const auto& action = Random::choice(actions);
 			nState->apply(action);
 		}
 

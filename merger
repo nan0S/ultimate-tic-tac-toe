@@ -32,6 +32,9 @@ DEPS=(
 	main.cpp
 )
 
-# echo "${DEPS[@]}"
-cat "${DEPS[@]}" > merged.cpp
-sed -i -e '/HPP/d' -e '/include "/d' merged.cpp
+output="CGSolver"
+cat "${DEPS[@]}" > $output.cpp
+sed -i -e '/HPP/d' -e '/include "/d' $output.cpp
+make $output
+rm $output
+clipcp $output.cpp

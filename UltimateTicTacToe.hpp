@@ -38,6 +38,7 @@ public:
 private:
 	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
 	AgentID turn = AGENT1;
+	int lastRow = -1, lastCol = -1;
 
 	bool isAllTerminal() const;
 	bool isRowDone(int row) const;
@@ -47,6 +48,7 @@ private:
 
 	bool isInRange(int idx) const;
 	bool canMove(AgentID agentID) const;
+	bool properBoard(int boardRow, int boardCol) const;
 
 	AgentID getWinner() const;
 

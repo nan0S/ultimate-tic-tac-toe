@@ -15,22 +15,10 @@ MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState,
 
 MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 	: state(initialState->clone()), actions(state->getValidActions()) {
-
+	std::shuffle(actions.begin(), actions.end(), Random::rng);
 }
 
-// #include "UltimateTicTacToe.hpp"
-
 sp<Action> MCTSAgent::getAction(const up<State>&) {
-	// UltimateTicTacToe* tic = dynamic_cast<UltimateTicTacToe*>(state.get());
-	// UltimateTicTacToe* tac = dynamic_cast<UltimateTicTacToe*>(root->state.get());
-	// assert(tic);
-	// assert(tac);
-	// for (int i = 0; i < 3; ++i)
-		// for (int j = 0; j < 3; ++j)
-			// for (int k = 0; k < 3; ++k)
-				// for (int l = 0; l < 3; ++l)
-					// assert(tic->board[i][j].board[k][l] == tac->board[i][j].board[k][l]);
-	// assert(tic->turn == tac->turn);
 	for (int i = 0; i < numberOfIters; ++i) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
@@ -75,7 +63,7 @@ sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::expand() {
 
 MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
 	: state(std::move(initialState)), actions(state->getValidActions()) {
-
+	std::shuffle(actions.begin(), actions.end(), Random::rng);
 }
 
 sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::selectChild(param_t exploreSpeed) {
@@ -93,19 +81,21 @@ param_t MCTSAgent::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
 
 int MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
-	auto actions = state->getValidActions();
-	std::shuffle(actions.begin(), actions.end(), Random::rng);
+	// auto actions = state->getValidActions();
+	// std::shuffle(actions.begin(), actions.end(), Random::rng);
 
-     int actionIdx = 0;
+     // int actionIdx = 0;
      while (!state->isTerminal()) {
 		// we assume that in initialState we get all valid actions which will become invalid
 		// after some actions are done, but no other will come
 		// it's not general but in UltimateTicTacToe it's true
-		while (!state->isValid(actions[actionIdx])) {
-			++actionIdx;
-			assert(actionIdx < int(actions.size()));
-		}
-		const auto& action = actions[actionIdx];
+		// while (!state->isValid(actions[actionIdx])) {
+			// ++actionIdx;
+			// assert(actionIdx < int(actions.size()));
+		// }
+		auto actions = state->getValidActions();
+		// const auto& action = actions[actionIdx];
+		const auto& action = Random::choice(actions);
 		state->apply(action);
 	}
 	return state->didWin(getID());

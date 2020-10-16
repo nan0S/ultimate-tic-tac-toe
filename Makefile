@@ -35,7 +35,7 @@ $(TARGET): $(OBJS)
 	$(CC) $(CXXFLAGS) -o $(EXENAME) $^
 
 main.o: main.cpp
-	$(CC) $(CXXFLAGS) -c -o $@ $<
+	$(CC) $(CXXFLAGS) -DLOCAL -c -o $@ $<
 
 %.o: %.cpp %.hpp
 	$(CC) $(CXXFLAGS) -c -o $@ $<

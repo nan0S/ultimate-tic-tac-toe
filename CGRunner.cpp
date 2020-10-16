@@ -3,6 +3,7 @@
 #include "UltimateTicTacToe.hpp"
 #include "MCTSAgent.hpp"
 #include "CGAgent.hpp"
+#include "RandomAgent.hpp"
 
 #include <cassert>
 
@@ -10,11 +11,11 @@ void CGRunner::playGame() const {
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		std::mksh<MCTSAgent>(AGENT2, game, 200, 2.0),
+		// std::mksh<MCTSAgent>(AGENT2, game, 200, 2.0),
+		std::mksh<MCTSAgent>(AGENT2, game, 200, 0.4),
+		// std::mksh<RandomAgent>(AGENT2),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
-
-	// std::cout << *game << std::endl;
 
 	int turn = 0; 
 	while (!game->isTerminal()) {
@@ -23,20 +24,22 @@ void CGRunner::playGame() const {
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 2.0);
+			// agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 2.0);
+			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}
 		
-		const auto& act = std::dynamic_pointer_cast<UltimateTicTacToe::UltimateTicTacToeAction>(action);
-		assert(act);
-		print(act);
+		if (!std::dynamic_pointer_cast<CGAgent>(agent)) {
+			const auto& act = std::dynamic_pointer_cast<UltimateTicTacToe::UltimateTicTacToeAction>(action);
+			assert(act);
+			print(act);
+		}
 	
 		for (int i = 0; i < agentCount; ++i)
 			agents[i]->recordAction(action);
 
 		game->apply(action);
-		// std::cout << *game  << std::endl;
 		turn ^= 1;
 	}
 }
