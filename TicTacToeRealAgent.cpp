@@ -46,6 +46,6 @@ bool TicTacToeRealAgent::isInRange(int idx) const {
 	return 1 <= idx && idx <= UltimateTicTacToe::BOARD_SIZE;
 }
 
-std::map<std::string, std::string> TicTacToeRealAgent::getDesc() const {
+std::vector<KeyValue> TicTacToeRealAgent::getDesc() const {
 	return { { "Real world, interactive player.", "" } };
 }

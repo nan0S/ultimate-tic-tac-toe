@@ -7,9 +7,11 @@ using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		int numberOfIters, param_t exploreSpeed) :
-	Agent(id), numberOfIters(numberOfIters),
-	exploreSpeed(exploreSpeed), root(std::mksh<MCTSNode>(initialState)) {
+		double limitInMs, param_t exploreSpeed) :
+	Agent(id),
+	timer(limitInMs),
+	exploreSpeed(exploreSpeed),
+	root(std::mksh<MCTSNode>(initialState)) {
 
 }
 
@@ -19,11 +21,17 @@ MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 }
 
 sp<Action> MCTSAgent::getAction(const up<State>&) {
-	for (int i = 0; i < numberOfIters; ++i) {
+	timer.startCalculation();
+
+	// for (int i = 0; i < 200; ++i) {
+	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
 		backup(selectedNode, delta);
+		++simulationCount;
 	}
+
+	timer.endCalculation();
 	return root->bestAction();	
 }
 
@@ -79,26 +87,17 @@ param_t MCTSAgent::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
 		c * std::sqrt(2 * std::log(stats.visits) / v->stats.visits);
 }
 
-int MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
+reward_t MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
-	// auto actions = state->getValidActions();
-	// std::shuffle(actions.begin(), actions.end(), Random::rng);
 
-     // int actionIdx = 0;
      while (!state->isTerminal()) {
-		// we assume that in initialState we get all valid actions which will become invalid
-		// after some actions are done, but no other will come
-		// it's not general but in UltimateTicTacToe it's true
-		// while (!state->isValid(actions[actionIdx])) {
-			// ++actionIdx;
-			// assert(actionIdx < int(actions.size()));
-		// }
 		auto actions = state->getValidActions();
-		// const auto& action = actions[actionIdx];
 		const auto& action = Random::choice(actions);
 		state->apply(action);
 	}
-	return state->didWin(getID());
+
+	return state->getReward(getID());
+	// return state->didWin(getID());
 }
 
 up<State> MCTSAgent::MCTSNode::cloneState() {
@@ -129,14 +128,10 @@ sp<Action> MCTSAgent::MCTSNode::bestAction() {
 	return actions[bestChildIdx];
 }
 
-// bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
-	// return stats.visits < o.stats.visits;
-// }
 bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
 	// return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
 	return stats.visits < o.stats.visits;
 }
-// #include "UltimateTicTacToe.hpp"
 
 void MCTSAgent::recordAction(const sp<Action>& action) {
 	auto recordActionIdx = std::find_if(root->actions.begin(), root->actions.end(),
@@ -152,9 +147,13 @@ void MCTSAgent::recordAction(const sp<Action>& action) {
 	assert(!root->parent.lock());
 }
 
-std::map<std::string, std::string> MCTSAgent::getDesc() const {
+std::vector<KeyValue> MCTSAgent::getDesc() const {
+	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
 	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
-		{ "Number of iterations", std::to_string(numberOfIters) },
+		{ "Number of iterations", std::to_string(100) },
+		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
+		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
 	};
 }

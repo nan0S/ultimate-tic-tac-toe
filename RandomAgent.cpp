@@ -12,6 +12,6 @@ sp<Action> RandomAgent::getAction(const up<State>& state) {
 	return Random::choice(validActions);
 }
 
-std::map<std::string, std::string> RandomAgent::getDesc() const {
+std::vector<KeyValue> RandomAgent::getDesc() const {
 	return { {"Random agent with uniform distribution.", ""} };
 }

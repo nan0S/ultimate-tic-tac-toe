@@ -8,7 +8,7 @@ class TicTacToeRealAgent : public Agent {
 public:
 	TicTacToeRealAgent(AgentID id);
 	sp<Action> getAction(const up<State>& state) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 	
 private:
 	bool isInRange(int idx) const;

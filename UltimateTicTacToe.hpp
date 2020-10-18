@@ -8,6 +8,8 @@
 
 class UltimateTicTacToe : public State {
 public:
+	using reward_t = State::reward_t;
+
 	struct UltimateTicTacToeAction : public Action {
 		UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 				const TicTacToe::TicTacToeAction& action);
@@ -26,6 +28,7 @@ public:
 
 	up<State> clone() override;
 	bool didWin(AgentID id) const override; 
+	reward_t getReward(AgentID id) const override;
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;

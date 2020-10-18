@@ -7,13 +7,15 @@
 
 #include <cassert>
 
+CGRunner::CGRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
+
+}
+
 void CGRunner::playGame() const {
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		// std::mksh<MCTSAgent>(AGENT2, game, 200, 2.0),
-		std::mksh<MCTSAgent>(AGENT2, game, 200, 0.4),
-		// std::mksh<RandomAgent>(AGENT2),
+		std::mksh<MCTSAgent>(AGENT2, game, turnLimitInMs, 0.4),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
 
@@ -24,8 +26,7 @@ void CGRunner::playGame() const {
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			// agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 2.0);
-			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 0.4),
+			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}

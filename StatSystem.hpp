@@ -1,10 +1,12 @@
 #ifndef STAT_SYSTEM_HPP
 #define STAT_SYSTEM_HPP
 
+#include "Common.hpp"
+
 #include <string>
-#include <map>
 #include <chrono>
 #include <vector>
+#include <map>
 
 class StatSystem {
 public:
@@ -14,7 +16,7 @@ public:
 	void recordEnd(const std::string& name);
 	void showStats() const;
 	void addDesc(const std::string& label,
-			const std::map<std::string, std::string>& vals);
+			const std::vector<KeyValue>& vals);
 	void reset();
 
 private:
@@ -31,7 +33,7 @@ private:
 	long long accumulatedTime;
 
 	std::map<std::string, int> counter;
-	std::map<std::string, std::map<std::string, std::string>> desc;
+	std::map<std::string, std::vector<KeyValue>> desc;
 
 	int numberOfExps;
 	bool isRunning;

@@ -6,60 +6,56 @@
 #include <algorithm>
 
 using ActionStats = FlatMCTSAgent::ActionStats;
+using reward_t = FlatMCTSAgent::reward_t;
 
-FlatMCTSAgent::FlatMCTSAgent(AgentID id, int numberOfIters) : 
-	Agent(id), numberOfIters(numberOfIters) {
+FlatMCTSAgent::FlatMCTSAgent(AgentID id, double limitInMs) : 
+	Agent(id),
+	timer(limitInMs) {
 
 }
 
 sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
+	timer.startCalculation();
+
 	auto validActions = state->getValidActions();
 	assert(!validActions.empty());
-	// std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 
 	int actionsNum = static_cast<int>(validActions.size());
 	stats.resize(actionsNum);
 	std::fill(stats.begin(), stats.end(), ActionStats());
-
-	// int perm[actionsNum];
-	// std::iota(perm, perm + actionsNum, 0);
 	
-	for (int i = 0; i < numberOfIters; ++i) {
-		// std::shuffle(perm, perm + actionsNum, Random::rng);
-		// int randActionIdx = perm[0];
-		// int consActionsIdx = 1;
+	for (int i = 0; i < 100; ++i) {
 		int randActionIdx = Random::rand(actionsNum);
 		auto nState = state->applyCopy(validActions[randActionIdx]);
 
 		while (!nState->isTerminal()) {
-			// we assume that in initialState we get all valid actions which will become invalid
-			// after some actions are done, but no other will come
-			// it's not in general but in UltimateTicTacToe it's true
-			// while (!nState->isValid(validActions[perm[consActionsIdx]])) {
-				// ++consActionsIdx;
-				// assert(consActionsIdx < actionsNum);
-			// }
 			auto actions = nState->getValidActions();
-			// const auto& action = validActions[perm[consActionsIdx]];
 			const auto& action = Random::choice(actions);
 			nState->apply(action);
 		}
 
 		++stats[randActionIdx].total;
+		// stats[randActionIdx].reward += nState->getReward(getID());
 		if (nState->didWin(getID()))
-			++stats[randActionIdx].winCount;
+			++stats[randActionIdx].reward;
 	}
 
 	int bestIdx = std::max_element(stats.begin(), stats.end()) - stats.begin();
-	return validActions[bestIdx];
+	const auto& bestAction = validActions[bestIdx];
+	timer.endCalculation();
+
+	return bestAction;
 }
 
 bool ActionStats::operator<(const ActionStats& o) const {
-	return 1ll * winCount * o.total < 1ll * o.winCount * total;
+	// return 1ll * winCount * o.total < 1ll * o.winCount * total;
+	return reward * o.total < o.reward * total;
 }
 
-std::map<std::string, std::string> FlatMCTSAgent::getDesc() const {
+std::vector<KeyValue> FlatMCTSAgent::getDesc() const {
 	return { { "Flat MCTS agent.", "" },
-		{ "Number of MCTS iterations", std::to_string(numberOfIters) }
+		{ "Number of MCTS iterations", std::to_string(100) },
+		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
+		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
 	};
 }

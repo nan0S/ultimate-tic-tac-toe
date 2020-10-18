@@ -7,7 +7,7 @@ CGAgent::CGAgent(AgentID id) : Agent(id) {
 
 }
 
-sp<Action> CGAgent::getAction(const up<State>& state) {
+sp<Action> CGAgent::getAction(const up<State>&) {
 	int oppRow, oppCol;
 	std::cin >> oppRow >> oppCol; std::cin.ignore();
 	

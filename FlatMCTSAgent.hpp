@@ -10,18 +10,22 @@
 
 class FlatMCTSAgent : public Agent {
 public:
-	FlatMCTSAgent(AgentID id, const int numberOfIters=100);
+	using reward_t = State::reward_t;
+
+	FlatMCTSAgent(AgentID id, double limitInMs);
+
 	sp<Action> getAction(const up<State>& state) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 	
 	struct ActionStats {
-		int winCount = 0;
+		// int winCount = 0;
+		reward_t reward = 0;
 		int total = 0;
 		bool operator<(const ActionStats& o) const;
 	};
 
 private:
-	const int numberOfIters;
+	CalcTimer timer;
 	std::vector<ActionStats> stats;
 };
 

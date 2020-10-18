@@ -1,5 +1,5 @@
 TARGET = main
-EXENAME = tictactoe
+EXENAME = ultimate-tictactoe
 OBJS = main.o \
 	Common.o \
 	State.o \

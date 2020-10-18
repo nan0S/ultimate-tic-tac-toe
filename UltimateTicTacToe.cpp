@@ -4,6 +4,7 @@
 #include <cassert>
 
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
+using reward_t = UltimateTicTacToe::reward_t;
 
 UltimateTicTacToeAction::UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 		const TicTacToe::TicTacToeAction& action) :
@@ -163,6 +164,13 @@ bool UltimateTicTacToe::isValid(const sp<Action>& act) const {
 
 bool UltimateTicTacToe::didWin(AgentID id) const {
 	return id == getWinner();
+}
+
+reward_t UltimateTicTacToe::getReward(AgentID id) const {
+	auto winner = getWinner();
+	if (winner == NONE)
+		return 0.5;
+	return id == winner ? 1 : 0;
 }
 
 up<State> UltimateTicTacToe::clone() {

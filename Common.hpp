@@ -16,6 +16,8 @@ using up = std::unique_ptr<T>;
 template<typename T>
 using wp = std::weak_ptr<T>;
 
+using KeyValue = std::pair<std::string, std::string>;
+
 void errorExit(const std::string& msg);
 
 namespace Random {
@@ -70,6 +72,29 @@ private:
 	std::chrono::time_point<std::chrono::high_resolution_clock> startPoint;
 
 	std::string getIndent();
+};
+
+class CalcTimer {
+public:
+	CalcTimer(double limitInMs);
+
+	void startCalculation();
+	bool isTimeLeft() const;
+	void endCalculation();
+
+	double getAverageCalcTime() const;
+	int getTotalNumberOfCals() const;
+	double getLimit() const;
+
+private:
+	double getElapsed() const;
+	
+private:
+	double limitInMs;
+	bool isRunning = false;
+	double totalCalcTime = 0;
+	std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+	int numberOfCalcs = 0;
 };
 
 #endif /* COMMON_HPP */

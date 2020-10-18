@@ -14,6 +14,8 @@ using up = std::unique_ptr<T>;
 template<typename T>
 using wp = std::weak_ptr<T>;
 
+using KeyValue = std::pair<std::string, std::string>;
+
 void errorExit(const std::string& msg);
 
 namespace Random {
@@ -70,8 +72,32 @@ private:
 	std::string getIndent();
 };
 
+class CalcTimer {
+public:
+	CalcTimer(double limitInMs);
+
+	void startCalculation();
+	bool isTimeLeft() const;
+	void endCalculation();
+
+	double getAverageCalcTime() const;
+	int getTotalNumberOfCals() const;
+	double getLimit() const;
+
+private:
+	double getElapsed() const;
+	
+private:
+	double limitInMs;
+	bool isRunning = false;
+	double totalCalcTime = 0;
+	std::chrono::time_point<std::chrono::high_resolution_clock> startTime;
+	int numberOfCalcs = 0;
+};
+
 
 #include <iomanip>
+#include <cassert>
 
 void errorExit(const std::string& msg) {
 	std::cerr << "ERROR: " << msg << '\n';
@@ -103,6 +129,46 @@ std::string SimpleTimer::getIndent() {
 	return std::string(2 * instanceCounter, ' ');
 }
 
+CalcTimer::CalcTimer(double limitInMs) : limitInMs(limitInMs) {
+}
+
+void CalcTimer::startCalculation() {
+	assert(!isRunning);
+	startTime = std::chrono::high_resolution_clock::now();
+	isRunning = true;
+}
+
+bool CalcTimer::isTimeLeft() const {
+	return getElapsed() <= limitInMs;
+}
+
+double CalcTimer::getElapsed() const {
+	auto endTime = std::chrono::high_resolution_clock::now();
+	return std::chrono::duration_cast<
+		std::chrono::nanoseconds>(endTime - startTime).count() * 1e-6;
+}
+
+
+void CalcTimer::endCalculation() {
+	assert(isRunning);
+	totalCalcTime += getElapsed();
+	isRunning = false;
+	++numberOfCalcs;
+}
+
+double CalcTimer::getAverageCalcTime() const {
+	assert(numberOfCalcs != 0);
+	return totalCalcTime / numberOfCalcs;
+}
+
+int CalcTimer::getTotalNumberOfCals() const {
+	return numberOfCalcs;
+}
+
+double CalcTimer::getLimit() const {
+	return limitInMs;
+}
+
 
 struct Action {
 	virtual bool equals(const sp<Action>& o) const = 0;
@@ -111,11 +177,15 @@ struct Action {
 
 
 
-#include <map>
+#include <vector>
 
 enum AgentID {
 	NONE = -1, AGENT1, AGENT2
 };
+
+namespace std {
+	std::string to_string(AgentID id);
+}
 
 class State;
 
@@ -125,13 +195,29 @@ public:
 	AgentID getID() const;
 	virtual sp<Action> getAction(const up<State>& state) = 0;
 	virtual void recordAction(const sp<Action>& action);
-	virtual std::map<std::string, std::string> getDesc() const;
+	virtual std::vector<KeyValue> getDesc() const;
 	virtual ~Agent() = default;
 
 private:
 	AgentID id;
 };
 
+
+#include <cassert>
+
+namespace std {
+	std::string to_string(AgentID id) {
+		switch (id) {
+			case NONE:
+				return "NONE";
+			case AGENT1:
+				return "AGENT1";
+			case AGENT2:
+				return "AGENT2";
+		}
+		assert(false);
+	}
+}
 
 Agent::Agent(AgentID id) : id(id) {
 
@@ -141,7 +227,7 @@ AgentID Agent::getID() const {
 	return id;
 }
 
-std::map<std::string, std::string> Agent::getDesc() const {
+std::vector<KeyValue> Agent::getDesc() const {
 	return {};
 }
 
@@ -152,6 +238,8 @@ void Agent::recordAction(const sp<Action>&) {
 
 class State {
 public:
+	using reward_t = double;
+
 	virtual bool isTerminal() const = 0;
 	virtual void apply(const sp<Action>& action) = 0;
 	up<State> applyCopy(const sp<Action>& action);
@@ -161,6 +249,7 @@ public:
 
 	virtual up<State> clone() = 0;
 	virtual bool didWin(AgentID id) const = 0;
+	virtual reward_t getReward(AgentID id) const = 0;
 
 	virtual std::ostream& print(std::ostream& out) const = 0;
 	friend std::ostream& operator<<(std::ostream& out, const State& state);
@@ -180,10 +269,11 @@ up<State> State::applyCopy(const sp<Action>& action) {
 	return ptr;
 }
 
+
 #include <string>
-#include <map>
 #include <chrono>
 #include <vector>
+#include <map>
 
 class StatSystem {
 public:
@@ -193,7 +283,7 @@ public:
 	void recordEnd(const std::string& name);
 	void showStats() const;
 	void addDesc(const std::string& label,
-			const std::map<std::string, std::string>& vals);
+			const std::vector<KeyValue>& vals);
 	void reset();
 
 private:
@@ -210,7 +300,7 @@ private:
 	long long accumulatedTime;
 
 	std::map<std::string, int> counter;
-	std::map<std::string, std::map<std::string, std::string>> desc;
+	std::map<std::string, std::vector<KeyValue>> desc;
 
 	int numberOfExps;
 	bool isRunning;
@@ -297,7 +387,7 @@ void StatSystem::printRecords() const {
 }
 
 void StatSystem::addDesc(const std::string& label,
-		const std::map<std::string, std::string>& vals) {
+		const std::vector<KeyValue>& vals) {
 	assert(desc.count(label) == 0);
 	desc[label] = vals;
 }
@@ -315,7 +405,7 @@ class RandomAgent : public Agent {
 public:
 	RandomAgent(AgentID id);
 	sp<Action> getAction(const up<State>& state) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 };
 
 
@@ -331,7 +421,7 @@ sp<Action> RandomAgent::getAction(const up<State>& state) {
 	return Random::choice(validActions);
 }
 
-std::map<std::string, std::string> RandomAgent::getDesc() const {
+std::vector<KeyValue> RandomAgent::getDesc() const {
 	return { {"Random agent with uniform distribution.", ""} };
 }
 
@@ -340,18 +430,22 @@ std::map<std::string, std::string> RandomAgent::getDesc() const {
 
 class FlatMCTSAgent : public Agent {
 public:
-	FlatMCTSAgent(AgentID id, const int numberOfIters=100);
+	using reward_t = State::reward_t;
+
+	FlatMCTSAgent(AgentID id, double limitInMs);
+
 	sp<Action> getAction(const up<State>& state) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 	
 	struct ActionStats {
-		int winCount = 0;
+		// int winCount = 0;
+		reward_t reward = 0;
 		int total = 0;
 		bool operator<(const ActionStats& o) const;
 	};
 
 private:
-	const int numberOfIters;
+	CalcTimer timer;
 	std::vector<ActionStats> stats;
 };
 
@@ -361,61 +455,57 @@ private:
 #include <algorithm>
 
 using ActionStats = FlatMCTSAgent::ActionStats;
+using reward_t = FlatMCTSAgent::reward_t;
 
-FlatMCTSAgent::FlatMCTSAgent(AgentID id, int numberOfIters) : 
-	Agent(id), numberOfIters(numberOfIters) {
+FlatMCTSAgent::FlatMCTSAgent(AgentID id, double limitInMs) : 
+	Agent(id),
+	timer(limitInMs) {
 
 }
 
 sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
+	timer.startCalculation();
+
 	auto validActions = state->getValidActions();
 	assert(!validActions.empty());
-	// std::shuffle(validActions.begin(), validActions.end(), Random::rng);
 
 	int actionsNum = static_cast<int>(validActions.size());
 	stats.resize(actionsNum);
 	std::fill(stats.begin(), stats.end(), ActionStats());
-
-	// int perm[actionsNum];
-	// std::iota(perm, perm + actionsNum, 0);
 	
-	for (int i = 0; i < numberOfIters; ++i) {
-		// std::shuffle(perm, perm + actionsNum, Random::rng);
-		// int randActionIdx = perm[0];
-		// int consActionsIdx = 1;
+	for (int i = 0; i < 100; ++i) {
 		int randActionIdx = Random::rand(actionsNum);
 		auto nState = state->applyCopy(validActions[randActionIdx]);
 
 		while (!nState->isTerminal()) {
-			// we assume that in initialState we get all valid actions which will become invalid
-			// after some actions are done, but no other will come
-			// it's not in general but in UltimateTicTacToe it's true
-			// while (!nState->isValid(validActions[perm[consActionsIdx]])) {
-				// ++consActionsIdx;
-				// assert(consActionsIdx < actionsNum);
-			// }
 			auto actions = nState->getValidActions();
-			// const auto& action = validActions[perm[consActionsIdx]];
 			const auto& action = Random::choice(actions);
 			nState->apply(action);
 		}
 
 		++stats[randActionIdx].total;
+		// stats[randActionIdx].reward += nState->getReward(getID());
 		if (nState->didWin(getID()))
-			++stats[randActionIdx].winCount;
+			++stats[randActionIdx].reward;
 	}
 
 	int bestIdx = std::max_element(stats.begin(), stats.end()) - stats.begin();
-	return validActions[bestIdx];
+	const auto& bestAction = validActions[bestIdx];
+	timer.endCalculation();
+
+	return bestAction;
 }
 
 bool ActionStats::operator<(const ActionStats& o) const {
-	return 1ll * winCount * o.total < 1ll * o.winCount * total;
+	// return 1ll * winCount * o.total < 1ll * o.winCount * total;
+	return reward * o.total < o.reward * total;
 }
 
-std::map<std::string, std::string> FlatMCTSAgent::getDesc() const {
+std::vector<KeyValue> FlatMCTSAgent::getDesc() const {
 	return { { "Flat MCTS agent.", "" },
-		{ "Number of MCTS iterations", std::to_string(numberOfIters) }
+		{ "Number of MCTS iterations", std::to_string(100) },
+		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
+		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
 	};
 }
 
@@ -423,18 +513,15 @@ std::map<std::string, std::string> FlatMCTSAgent::getDesc() const {
 class MCTSAgent : public Agent {
 public:
 	using param_t = double;
-	using reward_t = int;
+	using reward_t = State::reward_t;
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
-			int numberOfIters=100, param_t exploreSpeed=1.0);
+			double limitInMs, param_t exploreSpeed=1.0);
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 
 private:
-	int numberOfIters;
-	double exploreSpeed;
-
 	struct MCTSNode {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
@@ -461,24 +548,19 @@ private:
 		} stats;
 	};
 
-	int descended;
-	sp<MCTSNode> root;
-
 	sp<MCTSNode> treePolicy();
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	int defaultPolicy(const sp<MCTSNode>& initialNode);
+	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
 	void backup(sp<MCTSNode> node, reward_t delta);
+
+private:
+	CalcTimer timer;
+	double exploreSpeed;
+	sp<MCTSNode> root;
+	int descended;
+	int simulationCount = 0;
 };
 
-
-/*
- * node reprezentuje stan
- * node zawiera statystyki: win, total
- * node zawiera liste expanded dzieci
- * node zawiera liste zszufflowanych akcji poprawnych w stanie, ktory reprezentuje
- * node zawiera stan
- * node zawiera iterator/index do nastepnej akcji ktora uzyjemy w expand
-*/
 
 #include <cassert>
 #include <algorithm>
@@ -487,9 +569,11 @@ using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		int numberOfIters, param_t exploreSpeed) :
-	Agent(id), numberOfIters(numberOfIters),
-	exploreSpeed(exploreSpeed), root(std::mksh<MCTSNode>(initialState)) {
+		double limitInMs, param_t exploreSpeed) :
+	Agent(id),
+	timer(limitInMs),
+	exploreSpeed(exploreSpeed),
+	root(std::mksh<MCTSNode>(initialState)) {
 
 }
 
@@ -499,11 +583,17 @@ MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 }
 
 sp<Action> MCTSAgent::getAction(const up<State>&) {
-	for (int i = 0; i < numberOfIters; ++i) {
+	timer.startCalculation();
+
+	// for (int i = 0; i < 200; ++i) {
+	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
 		backup(selectedNode, delta);
+		++simulationCount;
 	}
+
+	timer.endCalculation();
 	return root->bestAction();	
 }
 
@@ -559,26 +649,17 @@ param_t MCTSAgent::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
 		c * std::sqrt(2 * std::log(stats.visits) / v->stats.visits);
 }
 
-int MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
+reward_t MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
-	// auto actions = state->getValidActions();
-	// std::shuffle(actions.begin(), actions.end(), Random::rng);
 
-     // int actionIdx = 0;
      while (!state->isTerminal()) {
-		// we assume that in initialState we get all valid actions which will become invalid
-		// after some actions are done, but no other will come
-		// it's not general but in UltimateTicTacToe it's true
-		// while (!state->isValid(actions[actionIdx])) {
-			// ++actionIdx;
-			// assert(actionIdx < int(actions.size()));
-		// }
 		auto actions = state->getValidActions();
-		// const auto& action = actions[actionIdx];
 		const auto& action = Random::choice(actions);
 		state->apply(action);
 	}
-	return state->didWin(getID());
+
+	return state->getReward(getID());
+	// return state->didWin(getID());
 }
 
 up<State> MCTSAgent::MCTSNode::cloneState() {
@@ -609,9 +690,6 @@ sp<Action> MCTSAgent::MCTSNode::bestAction() {
 	return actions[bestChildIdx];
 }
 
-// bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
-	// return stats.visits < o.stats.visits;
-// }
 bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
 	// return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
 	return stats.visits < o.stats.visits;
@@ -631,9 +709,13 @@ void MCTSAgent::recordAction(const sp<Action>& action) {
 	assert(!root->parent.lock());
 }
 
-std::map<std::string, std::string> MCTSAgent::getDesc() const {
+std::vector<KeyValue> MCTSAgent::getDesc() const {
+	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
 	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
-		{ "Number of iterations", std::to_string(numberOfIters) },
+		{ "Number of iterations", std::to_string(100) },
+		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
+		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
 	};
 }
@@ -875,6 +957,8 @@ bool TicTacToe::isOnTop(int row, int) const {
 
 class UltimateTicTacToe : public State {
 public:
+	using reward_t = State::reward_t;
+
 	struct UltimateTicTacToeAction : public Action {
 		UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 				const TicTacToe::TicTacToeAction& action);
@@ -893,6 +977,7 @@ public:
 
 	up<State> clone() override;
 	bool didWin(AgentID id) const override; 
+	reward_t getReward(AgentID id) const override;
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;
@@ -928,6 +1013,7 @@ private:
 #include <cassert>
 
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
+using reward_t = UltimateTicTacToe::reward_t;
 
 UltimateTicTacToeAction::UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 		const TicTacToe::TicTacToeAction& action) :
@@ -1089,6 +1175,13 @@ bool UltimateTicTacToe::didWin(AgentID id) const {
 	return id == getWinner();
 }
 
+reward_t UltimateTicTacToe::getReward(AgentID id) const {
+	auto winner = getWinner();
+	if (winner == NONE)
+		return 0.5;
+	return id == winner ? 1 : 0;
+}
+
 up<State> UltimateTicTacToe::clone() {
 	return up<State>(new UltimateTicTacToe(*this));
 }
@@ -1170,7 +1263,7 @@ class TicTacToeRealAgent : public Agent {
 public:
 	TicTacToeRealAgent(AgentID id);
 	sp<Action> getAction(const up<State>& state) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 	
 private:
 	bool isInRange(int idx) const;
@@ -1222,7 +1315,7 @@ bool TicTacToeRealAgent::isInRange(int idx) const {
 	return 1 <= idx && idx <= UltimateTicTacToe::BOARD_SIZE;
 }
 
-std::map<std::string, std::string> TicTacToeRealAgent::getDesc() const {
+std::vector<KeyValue> TicTacToeRealAgent::getDesc() const {
 	return { { "Real world, interactive player.", "" } };
 }
 
@@ -1232,33 +1325,41 @@ std::map<std::string, std::string> TicTacToeRealAgent::getDesc() const {
 
 class GameRunner {
 public:
+	GameRunner(double turnLimitInMs);
+
 	void playGames(int numberOfGames, bool verbose=false);
-	void playGame(bool verbose=false);
+	void playGame(bool verbose=false, bool lastGame=false);
 
 private:
 	void announceGameStart();
 	void announceGameEnd(const std::string& winner);
 
 	StatSystem statSystem;
+	double turnLimitInMs;
 };
 
 
 
+GameRunner::GameRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
+
+}
+
 void GameRunner::playGames(int numberOfGames, bool verbose) {
 	statSystem.reset();
-	for (int i = 0; i < numberOfGames; ++i)
+	for (int i = 0; i < numberOfGames - 1; ++i)
 		playGame(verbose);
+	playGame(verbose, true);
 	statSystem.showStats();
 }
 
-void GameRunner::playGame(bool verbose) {
+void GameRunner::playGame(bool verbose, bool lastGame) {
 	announceGameStart();
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		// std::mksh<RandomAgent>(AGENT1),
 		// std::mksh<FlatMCTSAgent>(AGENT1, 100),
-		std::mksh<MCTSAgent>(AGENT1, game, 100, 0.4),
+		std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
 		// std::mksh<RandomAgent>(AGENT2),
 		std::mksh<FlatMCTSAgent>(AGENT2, 100),
 		// std::mksh<MCTSAgent>(AGENT2, game, 100),
@@ -1267,13 +1368,6 @@ void GameRunner::playGame(bool verbose) {
 		// std::mksh<MCTSAgent>(AGENT2, game, 200, 3.0),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
-
-	static bool firstGame = true;
-	if (firstGame) {
-		for (int i = 0; i < agentCount; ++i)
-			statSystem.addDesc("AGENT" + std::to_string(i + 1), agents[i]->getDesc());
-		firstGame = false;
-	}
 
 	if (verbose)
 		std::cout << *game << '\n';
@@ -1291,6 +1385,13 @@ void GameRunner::playGame(bool verbose) {
 
 		if (verbose)
 			std::cout << *game << '\n';
+	}
+
+	if (lastGame) {
+		for (int i = 0; i < agentCount; ++i) {
+			auto id = agents[i]->getID();
+			statSystem.addDesc(std::to_string(id), agents[i]->getDesc());
+		}
 	}
 
 	announceGameEnd(game->getWinnerName());
@@ -1318,7 +1419,7 @@ CGAgent::CGAgent(AgentID id) : Agent(id) {
 
 }
 
-sp<Action> CGAgent::getAction(const up<State>& state) {
+sp<Action> CGAgent::getAction(const up<State>&) {
 	int oppRow, oppCol;
 	std::cin >> oppRow >> oppCol; std::cin.ignore();
 	
@@ -1342,22 +1443,31 @@ sp<Action> CGAgent::getAction(const up<State>& state) {
 
 class CGRunner {
 public:
+	CGRunner(double turnLimitInMs);
+
 	void playGame() const;
 
 private:
 	void print(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& action) const;
+
+private:
+	double turnLimitInMs;
 };
 
 
 
 #include <cassert>
 
+CGRunner::CGRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
+
+}
+
 void CGRunner::playGame() const {
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
 		// std::mksh<MCTSAgent>(AGENT2, game, 200, 2.0),
-		std::mksh<MCTSAgent>(AGENT2, game, 200, 0.4),
+		std::mksh<MCTSAgent>(AGENT2, game, turnLimitInMs, 0.4),
 		// std::mksh<RandomAgent>(AGENT2),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -1370,7 +1480,7 @@ void CGRunner::playGame() const {
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
 			// agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 2.0);
-			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 0.4),
+			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}
@@ -1401,10 +1511,11 @@ void CGRunner::print(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& actio
 
 bool verboseFlag = false;
 int numberOfGames = 1;
+double turnLimitInMs = 10;
 
 void parseArgs(int argc, char* argv[]) {
 	static const char helpstr[] =
-		"\nUsage: tictactoe [OPTIONS]... [TIMES]\n\n"
+		"\nUsage: tictactoe [OPTIONS]... [TIMES] [TURN_LIMIT_IN_MS]\n\n"
 		"Run TIMES TicTacToe games.\n\n"
 		"List of possible options:\n"
 		"\t-v, --verbose\tprint the game\n"
@@ -1429,25 +1540,23 @@ void parseArgs(int argc, char* argv[]) {
 
 	int rest = argc - optind;
 	if (rest > 2)
-		errorExit("Usage: tictactoe [times] [saveFile]");
-	if (rest >= 1)
+		errorExit("Usage: tictactoe [times] [turnLimitInMS]");
+	if (rest > 0)
 		numberOfGames = std::stoi(argv[optind++]);
+	if (rest > 1)
+		turnLimitInMs = std::stold(argv[optind++]);
 }
 
 
 int main(int argc, char* argv[]) {
 
 	std::ios_base::sync_with_stdio(false);
-#ifdef LOCAL
-	std::cout.tie(0);
-	std::cin.tie(0);
-#endif
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	GameRunner().playGames(numberOfGames, verboseFlag);
+	GameRunner(turnLimitInMs).playGames(numberOfGames, verboseFlag);
 #else
-	CGRunner().playGame();
+	CGRunner(turnLimitInMs).playGame();
 #endif
 
 	return 0;

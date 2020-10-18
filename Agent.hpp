@@ -2,14 +2,17 @@
 #define AGENT_HPP
 
 #include "Common.hpp"
-// #include "State.hpp"
 #include "Action.hpp"
 
-#include <map>
+#include <vector>
 
 enum AgentID {
 	NONE = -1, AGENT1, AGENT2
 };
+
+namespace std {
+	std::string to_string(AgentID id);
+}
 
 class State;
 
@@ -19,7 +22,7 @@ public:
 	AgentID getID() const;
 	virtual sp<Action> getAction(const up<State>& state) = 0;
 	virtual void recordAction(const sp<Action>& action);
-	virtual std::map<std::string, std::string> getDesc() const;
+	virtual std::vector<KeyValue> getDesc() const;
 	virtual ~Agent() = default;
 
 private:

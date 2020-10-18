@@ -7,18 +7,15 @@
 class MCTSAgent : public Agent {
 public:
 	using param_t = double;
-	using reward_t = int;
+	using reward_t = State::reward_t;
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
-			int numberOfIters=100, param_t exploreSpeed=1.0);
+			double limitInMs, param_t exploreSpeed=1.0);
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
-	std::map<std::string, std::string> getDesc() const override;
+	std::vector<KeyValue> getDesc() const override;
 
 private:
-	int numberOfIters;
-	double exploreSpeed;
-
 	struct MCTSNode {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
@@ -45,22 +42,17 @@ private:
 		} stats;
 	};
 
-	int descended;
-	sp<MCTSNode> root;
-
 	sp<MCTSNode> treePolicy();
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	int defaultPolicy(const sp<MCTSNode>& initialNode);
+	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
 	void backup(sp<MCTSNode> node, reward_t delta);
+
+private:
+	CalcTimer timer;
+	double exploreSpeed;
+	sp<MCTSNode> root;
+	int descended;
+	int simulationCount = 0;
 };
 
 #endif /* MCTS_AGENT_HPP */
-
-/*
- * node reprezentuje stan
- * node zawiera statystyki: win, total
- * node zawiera liste expanded dzieci
- * node zawiera liste zszufflowanych akcji poprawnych w stanie, ktory reprezentuje
- * node zawiera stan
- * node zawiera iterator/index do nastepnej akcji ktora uzyjemy w expand
-*/

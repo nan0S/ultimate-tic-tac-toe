@@ -6,10 +6,11 @@
 
 bool verboseFlag = false;
 int numberOfGames = 1;
+double turnLimitInMs = 10;
 
 void parseArgs(int argc, char* argv[]) {
 	static const char helpstr[] =
-		"\nUsage: tictactoe [OPTIONS]... [TIMES]\n\n"
+		"\nUsage: tictactoe [OPTIONS]... [TIMES] [TURN_LIMIT_IN_MS]\n\n"
 		"Run TIMES TicTacToe games.\n\n"
 		"List of possible options:\n"
 		"\t-v, --verbose\tprint the game\n"
@@ -34,25 +35,23 @@ void parseArgs(int argc, char* argv[]) {
 
 	int rest = argc - optind;
 	if (rest > 2)
-		errorExit("Usage: tictactoe [times] [saveFile]");
-	if (rest >= 1)
+		errorExit("Usage: tictactoe [times] [turnLimitInMS]");
+	if (rest > 0)
 		numberOfGames = std::stoi(argv[optind++]);
+	if (rest > 1)
+		turnLimitInMs = std::stold(argv[optind++]);
 }
 
 
 int main(int argc, char* argv[]) {
 
 	std::ios_base::sync_with_stdio(false);
-#ifdef LOCAL
-	std::cout.tie(0);
-	std::cin.tie(0);
-#endif
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	GameRunner().playGames(numberOfGames, verboseFlag);
+	GameRunner(turnLimitInMs).playGames(numberOfGames, verboseFlag);
 #else
-	CGRunner().playGame();
+	CGRunner(turnLimitInMs).playGame();
 #endif
 
 	return 0;

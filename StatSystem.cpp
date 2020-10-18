@@ -80,7 +80,7 @@ void StatSystem::printRecords() const {
 }
 
 void StatSystem::addDesc(const std::string& label,
-		const std::map<std::string, std::string>& vals) {
+		const std::vector<KeyValue>& vals) {
 	assert(desc.count(label) == 0);
 	desc[label] = vals;
 }
