@@ -1,34 +1,30 @@
-#ifndef MCTS_AGENT_HPP
-#define MCTS_AGENT_HPP
+#ifndef MCTS_AGENT_BASE_HPP
+#define MCTS_AGENT_BASE_HPP
 
 #include "Agent.hpp"
 #include "State.hpp"
 
-class MCTSAgent : public Agent {
+class MCTSAgentBase : public Agent {
 public:
 	using param_t = double;
 	using reward_t = State::reward_t;
-
-  	MCTSAgent(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, param_t exploreSpeed=1.0);
-
-	sp<Action> getAction(const up<State> &state) override;
-	void recordAction(const sp<Action> &action) override;
-	// virtual std::vector<KeyValue> getDesc() const = 0;
 
 protected:
 	struct MCTSNode {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
 
-		inline bool isTerminal() const;
-		inline bool shouldExpand() const;
+		bool isTerminal() const;
+		bool shouldExpand() const;
 		sp<MCTSNode> expand();
-		sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
+		sp<MCTSNode> selectChild(param_t exploreFactor=1.0);
+
+		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
+
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		up<State> cloneState();
 		void addReward(reward_t delta);
 		sp<Action> getBestAction();
+		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;
 
 		up<State> state;
@@ -43,18 +39,27 @@ protected:
 		} stats;
 	};
 
-	virtual sp<MCTSNode> treePolicy();
-	virtual sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
-	virtual void backup(sp<MCTSNode> node, reward_t delta);
+public:
+  	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
+		double calcLimitInMs, param_t exploreFactor=1.0);
+
+	sp<Action> getAction(const up<State> &state) override;
+	void recordAction(const sp<Action> &action) override;
+	void changeCalcLimit(double newLimitInMs);
+
+protected:
+	virtual sp<MCTSNode> treePolicy() = 0;
+	sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
+	virtual void backup(sp<MCTSNode> node, reward_t delta) = 0;
 
 protected:
 	sp<MCTSNode> root;
 	CalcTimer timer;
-	double exploreSpeed;
+	double exploreFactor;
 
 	int descended;
 	int simulationCount = 0;
 };
 
-#endif /* MCTS_AGENT_HPP */
+#endif /* MCTS_AGENT_BASE_HPP */

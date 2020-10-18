@@ -9,7 +9,7 @@ public:
 	using param_t = double;
 	using reward_t = State::reward_t;
 
-	  MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
+	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, param_t exploreSpeed=1.0,
 			param_t epsilon=0.8);
 

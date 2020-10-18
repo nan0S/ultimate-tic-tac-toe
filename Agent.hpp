@@ -25,7 +25,7 @@ public:
 	virtual std::vector<KeyValue> getDesc() const;
 	virtual ~Agent() = default;
 
-private:
+protected:
 	AgentID id;
 };
 

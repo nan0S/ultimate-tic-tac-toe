@@ -13,12 +13,12 @@ CGRunner::CGRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
 }
 
 void CGRunner::playGame() const {
-	using agent_t = MCTSAgentWithMAST;
+	using agent_t = MCTSAgent;
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, 0.4, 0.7),
+		std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, 0.4),
 	};
 
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -30,7 +30,7 @@ void CGRunner::playGame() const {
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, 0.4, 0.7),
+			agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}

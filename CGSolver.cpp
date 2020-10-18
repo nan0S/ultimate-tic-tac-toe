@@ -205,7 +205,7 @@ public:
 	virtual std::vector<KeyValue> getDesc() const;
 	virtual ~Agent() = default;
 
-private:
+protected:
 	AgentID id;
 };
 
@@ -520,33 +520,27 @@ std::vector<KeyValue> FlatMCTSAgent::getDesc() const {
 }
 
 
-class MCTSAgent : public Agent {
+class MCTSAgentBase : public Agent {
 public:
 	using param_t = double;
 	using reward_t = State::reward_t;
 
-  	MCTSAgent(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, param_t exploreSpeed=1.0);
-
-	sp<Action> getAction(const up<State> &state) override;
-	void recordAction(const sp<Action> &action) override;
-	std::vector<KeyValue> getDesc() const override;
-
-	void changeCalcLimit(double newLimitInMs);
-
-private:
+protected:
 	struct MCTSNode {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
 
-		inline bool isTerminal() const;
-		inline bool shouldExpand() const;
+		bool isTerminal() const;
+		bool shouldExpand() const;
 		sp<MCTSNode> expand();
-		sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
+		sp<MCTSNode> selectChild(param_t exploreFactor=1.0);
+
+		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
+
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		up<State> cloneState();
 		void addReward(reward_t delta);
-		sp<Action> bestAction();
+		sp<Action> getBestAction();
+		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;
 
 		up<State> state;
@@ -561,15 +555,24 @@ private:
 		} stats;
 	};
 
-	sp<MCTSNode> treePolicy();
-	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
-	void backup(sp<MCTSNode> node, reward_t delta);
+public:
+  	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
+		double calcLimitInMs, param_t exploreFactor=1.0);
 
-private:
+	sp<Action> getAction(const up<State> &state) override;
+	void recordAction(const sp<Action> &action) override;
+	void changeCalcLimit(double newLimitInMs);
+
+protected:
+	virtual sp<MCTSNode> treePolicy() = 0;
+	sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
+	virtual void backup(sp<MCTSNode> node, reward_t delta) = 0;
+
+protected:
 	sp<MCTSNode> root;
 	CalcTimer timer;
-	double exploreSpeed;
+	double exploreFactor;
 
 	int descended;
 	int simulationCount = 0;
@@ -579,24 +582,29 @@ private:
 #include <cassert>
 #include <algorithm>
 
-using param_t = MCTSAgent::param_t;
-using reward_t = MCTSAgent::reward_t;
+using param_t = MCTSAgentBase::param_t;
+using reward_t = MCTSAgentBase::reward_t;
 
-MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		double calcLimitInMs, param_t exploreSpeed) :
+MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root, 
+		double calcLimitInMs, param_t exploreFactor) :
 	Agent(id),
-	root(std::mksh<MCTSNode>(initialState)),
+	root(std::move(root)),
 	timer(calcLimitInMs),
-	exploreSpeed(exploreSpeed) {
+	exploreFactor(exploreFactor) {
 
 }
 
-MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
+MCTSAgentBase::MCTSNode::MCTSNode(const up<State>& initialState)
 	: state(initialState->clone()), actions(state->getValidActions()) {
 	std::shuffle(actions.begin(), actions.end(), Random::rng);
 }
 
-sp<Action> MCTSAgent::getAction(const up<State>&) {
+MCTSAgentBase::MCTSNode::MCTSNode(up<State>&& initialState)
+	: state(std::move(initialState)), actions(state->getValidActions()) {
+	std::shuffle(actions.begin(), actions.end(), Random::rng);
+}
+
+sp<Action> MCTSAgentBase::getAction(const up<State>&) {
 	timer.startCalculation();
 
 	while (timer.isTimeLeft()) {
@@ -607,51 +615,34 @@ sp<Action> MCTSAgent::getAction(const up<State>&) {
 	}
 
 	timer.stopCalculation();
-	return root->bestAction();	
+	return root->getBestAction();	
 }
 
-sp<MCTSAgent::MCTSNode> MCTSAgent::treePolicy() {
-	auto currentNode = root;
-	descended = 0;
-
-	while (!currentNode->isTerminal()) {
-		++descended;
-		if (currentNode->shouldExpand())
-			return expand(currentNode);
-		currentNode = currentNode->selectChild(exploreSpeed);
-	}
-
-	return currentNode;
-}
-
-bool MCTSAgent::MCTSNode::isTerminal() const {
+bool MCTSAgentBase::MCTSNode::isTerminal() const {
 	return state->isTerminal();
 }
 
-bool MCTSAgent::MCTSNode::shouldExpand() const {
+bool MCTSAgentBase::MCTSNode::shouldExpand() const {
 	return nextActionToResolveIdx < int(actions.size());
 }
 
-sp<MCTSAgent::MCTSNode> MCTSAgent::expand(const sp<MCTSNode>& node) {
+sp<MCTSAgentBase::MCTSNode> MCTSAgentBase::expand(const sp<MCTSNode>& node) {
 	auto newNode = node->expand();
 	newNode->parent = node;
 	return newNode;
 }
 
-sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::expand() {
+sp<MCTSAgentBase::MCTSNode> MCTSAgentBase::MCTSNode::expand() {
 	assert(nextActionToResolveIdx == int(children.size()));
 	assert(nextActionToResolveIdx < int(actions.size()));
+
 	const auto& action = actions[nextActionToResolveIdx++];
-	children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
+	children.push_back(getChildFromState(state->applyCopy(action)));
+	// children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
 	return children.back();
 }
 
-MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
-	: state(std::move(initialState)), actions(state->getValidActions()) {
-	std::shuffle(actions.begin(), actions.end(), Random::rng);
-}
-
-sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::selectChild(param_t exploreSpeed) {
+sp<MCTSAgentBase::MCTSNode> MCTSAgentBase::MCTSNode::selectChild(param_t exploreSpeed) {
 	assert(!children.empty());
 	return *std::max_element(children.begin(), children.end(),
 			[&exploreSpeed, this](const auto& ch1, const auto& ch2){
@@ -659,12 +650,115 @@ sp<MCTSAgent::MCTSNode> MCTSAgent::MCTSNode::selectChild(param_t exploreSpeed) {
 	});
 }
 
-param_t MCTSAgent::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
+param_t MCTSAgentBase::MCTSNode::UCT(const sp<MCTSNode>& v, param_t c) const {
 	return param_t(v->stats.score) / v->stats.visits +
 		c * std::sqrt(2 * std::log(stats.visits) / v->stats.visits);
 }
 
-reward_t MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
+up<State> MCTSAgentBase::MCTSNode::cloneState() {
+	return state->clone();
+}
+
+void MCTSAgentBase::MCTSNode::addReward(reward_t delta) {
+	stats.score += delta;
+	++stats.visits;
+}
+
+sp<Action> MCTSAgentBase::MCTSNode::getBestAction() {
+	int bestChildIdx = std::max_element(children.begin(), children.end(),
+			[](const auto& ch1, const auto& ch2){
+		return *ch1 < *ch2;
+	}) - children.begin();
+	assert(bestChildIdx < int(actions.size()));
+	return actions[bestChildIdx];
+}
+
+bool MCTSAgentBase::MCTSNode::operator<(const MCTSNode& o) const {
+	// return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
+	return stats.visits < o.stats.visits;
+}
+
+void MCTSAgentBase::recordAction(const sp<Action>& action) {
+	auto recordActionIdx = std::find_if(root->actions.begin(), root->actions.end(),
+			[&action](const auto& x){
+		return action->equals(x);
+	}) - root->actions.begin();
+
+	assert(recordActionIdx < int(root->actions.size()));
+	if (recordActionIdx < int(root->children.size()))
+		root = root->children[recordActionIdx];
+	else
+		root = root->getChildFromState(root->state->applyCopy(action));
+		// root = std::mksh<MCTSNode>(root->state->applyCopy(action));
+	assert(!root->parent.lock());
+}
+
+void MCTSAgentBase::changeCalcLimit(double newLimitInMs) {
+	timer.changeLimit(newLimitInMs);
+}
+
+
+class MCTSAgent : public MCTSAgentBase {
+public:
+	using param_t = MCTSAgentBase::param_t;
+	using reward_t = MCTSAgentBase::reward_t;
+	using MCTSNodeBase = MCTSAgentBase::MCTSNode;
+
+  	MCTSAgent(AgentID id, const up<State> &initialState,
+			double calcLimitInMs, param_t exploreSpeed=1.0);
+
+	std::vector<KeyValue> getDesc() const override;
+
+protected:
+	struct MCTSNode : public MCTSAgentBase::MCTSNode {
+		MCTSNode(const up<State>& initialState);
+		MCTSNode(up<State>&& initialState);
+		sp<MCTSNodeBase> getChildFromState(up<State>&& state) override;
+	};
+
+	sp<MCTSAgentBase::MCTSNode> treePolicy() override;
+	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+};
+
+
+#include <cassert>
+
+using param_t = MCTSAgent::param_t;
+using reward_t = MCTSAgent::reward_t;
+using MCTSNodeBase = MCTSAgent::MCTSNodeBase;
+
+MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
+		double calcLimitInMs, param_t exploreFactor) :
+	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor) {
+
+}
+
+MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) :
+	MCTSNodeBase(initialState) {
+
+}
+
+sp<MCTSNodeBase> MCTSAgent::treePolicy() {
+	auto currentNode = root;
+	descended = 0;
+
+	while (!currentNode->isTerminal()) {
+		++descended;
+		if (currentNode->shouldExpand())
+			return expand(currentNode);
+		currentNode = currentNode->selectChild(exploreFactor);
+	}
+
+	return currentNode;
+}
+
+MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
+	: MCTSNodeBase(std::move(initialState)) {
+
+}
+
+reward_t MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
 
      while (!state->isTerminal()) {
@@ -676,11 +770,7 @@ reward_t MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	return state->getReward(getID());
 }
 
-up<State> MCTSAgent::MCTSNode::cloneState() {
-	return state->clone();
-}
-
-void MCTSAgent::backup(sp<MCTSNode> node, reward_t delta) {
+void MCTSAgent::backup(sp<MCTSNodeBase> node, reward_t delta) {
 	int ascended = 0;
 
 	while (node) {
@@ -692,37 +782,8 @@ void MCTSAgent::backup(sp<MCTSNode> node, reward_t delta) {
 	assert(descended + 1 == ascended);
 }
 
-void MCTSAgent::MCTSNode::addReward(reward_t delta) {
-	stats.score += delta;
-	++stats.visits;
-}
-
-sp<Action> MCTSAgent::MCTSNode::bestAction() {
-	int bestChildIdx = std::max_element(children.begin(), children.end(),
-			[](const auto& ch1, const auto& ch2){
-		return *ch1 < *ch2;
-	}) - children.begin();
-	assert(bestChildIdx < int(actions.size()));
-	return actions[bestChildIdx];
-}
-
-bool MCTSAgent::MCTSNode::operator<(const MCTSNode& o) const {
-	// return 1ll * stats.score * o.stats.visits < 1ll * o.stats.score * stats.score;
-	return stats.visits < o.stats.visits;
-}
-
-void MCTSAgent::recordAction(const sp<Action>& action) {
-	auto recordActionIdx = std::find_if(root->actions.begin(), root->actions.end(),
-			[&action](const auto& x){
-		return action->equals(x);
-	}) - root->actions.begin();
-
-	assert(recordActionIdx < int(root->actions.size()));
-	if (recordActionIdx < int(root->children.size()))
-		root = root->children[recordActionIdx];
-	else
-		root = std::mksh<MCTSNode>(root->state->applyCopy(action));
-	assert(!root->parent.lock());
+sp<MCTSNodeBase> MCTSAgent::MCTSNode::getChildFromState(up<State>&& state) {
+	return std::mksh<MCTSNode>(std::move(state));
 }
 
 std::vector<KeyValue> MCTSAgent::getDesc() const {
@@ -731,12 +792,8 @@ std::vector<KeyValue> MCTSAgent::getDesc() const {
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
 		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
-		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
+		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) }
 	};
-}
-
-void MCTSAgent::changeCalcLimit(double newLimitInMs) {
-	timer.changeLimit(newLimitInMs);
 }
 
 
@@ -745,9 +802,9 @@ public:
 	using param_t = double;
 	using reward_t = State::reward_t;
 
-  	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
+	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, param_t exploreSpeed=1.0,
-			param_t epsilon=0.3);
+			param_t epsilon=0.8);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
@@ -807,7 +864,7 @@ private:
 	int maxAgentCount;
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;
-	std::vector<std::pair<AgentID, sp<Action>>> actionHistory;
+	std::vector<std::pair<AgentID, int>> actionHistory;
 	int defaultPolicyLength;
 };
 
@@ -825,11 +882,12 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	timer(calcLimitInMs),
 	exploreSpeed(exploreSpeed),
 	epsilon(epsilon),
-     maxAgentCount(initialState->getAgentCount()),
+	maxAgentCount(initialState->getAgentCount()),
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
-	std::fill(actionsStats.begin(), actionsStats.end(), std::vector<MASTActionStats>(maxActionCount));
+	std::fill(actionsStats.begin(), actionsStats.end(),
+			std::vector<MASTActionStats>(maxActionCount));
 }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState)
@@ -857,21 +915,18 @@ sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::treePolicy() {
 	while (!currentNode->isTerminal()) {
 		++timesTreeDescended;
 		if (currentNode->shouldExpand()) {
-			// return expand(currentNode);
 			int expandIdx = expandAndGetIdx(currentNode);
 			assert(expandIdx == int(currentNode->children.size() - 1));
 			assert(expandIdx == currentNode->nextActionToResolveIdx - 1);
-			actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]);
+			actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]->getIdx());
 			return currentNode->children[expandIdx];
 		}
 		
 		int selectedChildIdx = currentNode->selectAndGetIdx(exploreSpeed);
 		assert(selectedChildIdx < int(currentNode->children.size()));
 		assert(selectedChildIdx < int(currentNode->actions.size()));
-		actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]);
+		actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]->getIdx());
 		currentNode = currentNode->children[selectedChildIdx];
-		// currentNode = currentNode->selectChild(exploreSpeed);
-
 	}
 	return currentNode;
 }
@@ -899,33 +954,10 @@ int MCTSAgentWithMAST::MCTSNode::expandAndGetIdx() {
 	return nextActionToResolveIdx++;
 }
 
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::expand(const sp<MCTSNode>& node) {
-	// auto newNode = node->expand();
-	// newNode->parent = node;
-	// return newNode;
-// }
-
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::MCTSNode::expand() {
-	// assert(nextActionToResolveIdx == int(children.size()));
-	// assert(nextActionToResolveIdx < int(actions.size()));
-
-	// const auto& action = actions[nextActionToResolveIdx++];
-	// children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
-	// return children.back();
-// }
-
 MCTSAgentWithMAST::MCTSNode::MCTSNode(up<State>&& initialState)
 	: state(std::move(initialState)), actions(state->getValidActions()) {
 	std::shuffle(actions.begin(), actions.end(), Random::rng);
 }
-
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::MCTSNode::selectChild(param_t exploreSpeed) {
-	// assert(!children.empty());
-	// return *std::max_element(children.begin(), children.end(),
-			// [&exploreSpeed, this](const auto& ch1, const auto& ch2){
-		// return UCT(ch1, exploreSpeed) < UCT(ch2, exploreSpeed);
-	// });
-// }
 
 int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreSpeed) {
 	assert(!children.empty());
@@ -944,9 +976,9 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
 	defaultPolicyLength = 0;
 
-     while (!state->isTerminal()) {
+	while (!state->isTerminal()) {
 		const auto action = getActionWithDefaultPolicy(state);
-		actionHistory.emplace_back(state->getTurn(), action);
+		actionHistory.emplace_back(state->getTurn(), action->getIdx());
 		state->apply(action);
 		++defaultPolicyLength;
 	}
@@ -992,8 +1024,8 @@ void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
 		  (delta == 0 && actionHistory.back().first != getID()) ||
 		   delta == 0.5);
 
-	for (const auto& [agentID, action] : actionHistory)
-		updateActionStat(agentID, action->getIdx(), delta);
+	for (const auto& [agentID, actionIdx] : actionHistory)
+		updateActionStat(agentID, actionIdx, delta);
 
 	actionHistory.clear();
 }
@@ -1717,7 +1749,7 @@ void GameRunner::playGame(bool verbose, bool lastGame) {
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
-		std::mksh<MCTSAgentWithMAST>(AGENT1, game, turnLimitInMs, 0.4, 0.6),
+		std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
 		std::mksh<FlatMCTSAgent>(AGENT2, 100),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -1817,12 +1849,12 @@ CGRunner::CGRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
 }
 
 void CGRunner::playGame() const {
-	using agent_t = MCTSAgentWithMAST;
+	using agent_t = MCTSAgent;
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, 0.4, 0.7),
+		std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, 0.4),
 	};
 
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -1834,7 +1866,7 @@ void CGRunner::playGame() const {
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, 0.4, 0.7),
+			agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}

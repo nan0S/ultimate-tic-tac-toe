@@ -1,62 +1,30 @@
 #ifndef MCTS_AGENT_HPP
 #define MCTS_AGENT_HPP
 
-#include "Agent.hpp"
+#include "MCTSAgentBase.hpp"
 #include "State.hpp"
 
-class MCTSAgent : public Agent {
+class MCTSAgent : public MCTSAgentBase {
 public:
-	using param_t = double;
-	using reward_t = State::reward_t;
+	using param_t = MCTSAgentBase::param_t;
+	using reward_t = MCTSAgentBase::reward_t;
+	using MCTSNodeBase = MCTSAgentBase::MCTSNode;
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, param_t exploreSpeed=1.0);
 
-	sp<Action> getAction(const up<State> &state) override;
-	void recordAction(const sp<Action> &action) override;
-	virtual std::vector<KeyValue> getDesc() const override;
-
-	void changeCalcLimit(double newLimitInMs);
+	std::vector<KeyValue> getDesc() const override;
 
 protected:
-	struct MCTSNode {
+	struct MCTSNode : public MCTSAgentBase::MCTSNode {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
-
-		inline bool isTerminal() const;
-		inline bool shouldExpand() const;
-		sp<MCTSNode> expand();
-		sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
-		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		up<State> cloneState();
-		void addReward(reward_t delta);
-		sp<Action> getBestAction();
-		bool operator<(const MCTSNode& o) const;
-
-		up<State> state;
-		wp<MCTSNode> parent;
-		std::vector<sp<MCTSNode>> children;
-		std::vector<sp<Action>> actions;
-		int nextActionToResolveIdx = 0;
-		
-		struct MCTSNodeStats {
-			reward_t score = 0;
-			int visits = 0;
-		} stats;
+		sp<MCTSNodeBase> getChildFromState(up<State>&& state) override;
 	};
 
-	sp<MCTSNode> treePolicy();
-	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
-	void backup(sp<MCTSNode> node, reward_t delta);
-
-protected:
-	sp<MCTSNode> root;
-	CalcTimer timer;
-	double exploreSpeed;
-
-	int descended;
-	int simulationCount = 0;
+	sp<MCTSAgentBase::MCTSNode> treePolicy() override;
+	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
 };
 
 #endif /* MCTS_AGENT_HPP */

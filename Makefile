@@ -12,6 +12,7 @@ OBJS = main.o \
 	StatSystem.o \
 	FlatMCTSAgent.o \
 	TicTacToeRealAgent.o \
+	MCTSAgentBase.o \
 	MCTSAgent.o \
 	CGAgent.o \
 	CGRunner.o \
