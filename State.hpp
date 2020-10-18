@@ -23,6 +23,7 @@ public:
 	virtual up<State> clone() = 0;
 	virtual bool didWin(AgentID id) const = 0;
 	virtual reward_t getReward(AgentID id) const = 0;
+	virtual AgentID getTurn() const = 0;
 
 	virtual std::ostream& print(std::ostream& out) const = 0;
 	friend std::ostream& operator<<(std::ostream& out, const State& state);

@@ -26,9 +26,11 @@ private:
 
 		inline bool isTerminal() const;
 		inline bool shouldExpand() const;
+		int expandAndGetIdx();
 		sp<MCTSNode> expand();
-		sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
-		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
+		int selectAndGetIdx(param_t exploreSpeed);
+		// sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
+		param_t UCT(const sp<MCTSNode>& v, param_t c) const;
 		up<State> cloneState();
 		void addReward(reward_t delta);
 		sp<Action> bestAction();
@@ -52,6 +54,7 @@ private:
 	};
 
 	sp<MCTSNode> treePolicy();
+	int expandAndGetIdx(const sp<MCTSNode>& node);
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
 	void backup(sp<MCTSNode> node, reward_t delta);

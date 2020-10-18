@@ -33,6 +33,7 @@ public:
 	up<State> clone() override;
 	bool didWin(AgentID id) const override; 
 	reward_t getReward(AgentID id) const override;
+	AgentID getTurn() const override;
 
 	std::ostream& print(std::ostream& out) const override;
 	std::string getWinnerName() const override;

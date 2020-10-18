@@ -264,3 +264,8 @@ int UltimateTicTacToe::getActionIdx(const sp<Action>& action) const {
 	int c = act->col * BOARD_SIZE + act->action.col;
 	return r * BOARD_SIZE * BOARD_SIZE + c;
 }
+
+AgentID UltimateTicTacToe::getTurn() const {
+	assert(turn != NONE);
+	return turn;
+}
