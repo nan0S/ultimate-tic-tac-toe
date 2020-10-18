@@ -24,15 +24,8 @@ void GameRunner::playGame(bool verbose, bool lastGame) {
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
-		// std::mksh<RandomAgent>(AGENT1),
-		// std::mksh<FlatMCTSAgent>(AGENT1, 100),
 		std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
-		// std::mksh<RandomAgent>(AGENT2),
 		std::mksh<FlatMCTSAgent>(AGENT2, 100),
-		// std::mksh<MCTSAgent>(AGENT2, game, 100),
-		// std::mksh<RandomAgent>(AGENT2)
-		// std::mksh<FlatMCTSAgent>(AGENT1, 200),
-		// std::mksh<MCTSAgent>(AGENT2, game, 200, 3.0),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
 

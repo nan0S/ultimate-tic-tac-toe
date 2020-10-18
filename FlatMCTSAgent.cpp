@@ -48,7 +48,6 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 }
 
 bool ActionStats::operator<(const ActionStats& o) const {
-	// return 1ll * winCount * o.total < 1ll * o.winCount * total;
 	return reward * o.total < o.reward * total;
 }
 

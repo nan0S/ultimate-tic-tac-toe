@@ -23,7 +23,6 @@ MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 sp<Action> MCTSAgent::getAction(const up<State>&) {
 	timer.startCalculation();
 
-	// for (int i = 0; i < 200; ++i) {
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
