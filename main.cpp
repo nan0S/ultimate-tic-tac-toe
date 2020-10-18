@@ -6,7 +6,7 @@
 
 bool verboseFlag = false;
 int numberOfGames = 1;
-double turnLimitInMs = 10;
+double turnLimitInMs = 100;
 
 void parseArgs(int argc, char* argv[]) {
 	static const char helpstr[] =

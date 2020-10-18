@@ -156,3 +156,7 @@ std::vector<KeyValue> MCTSAgent::getDesc() const {
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
 	};
 }
+
+void MCTSAgent::changeTurnLimit(double newLimitInMs) {
+	timer.changeLimit(newLimitInMs);
+}

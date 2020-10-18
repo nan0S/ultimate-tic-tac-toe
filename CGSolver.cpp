@@ -84,6 +84,8 @@ public:
 	int getTotalNumberOfCals() const;
 	double getLimit() const;
 
+	void changeLimit(double newLimitInMs);
+
 private:
 	double getElapsed() const;
 	
@@ -167,6 +169,10 @@ int CalcTimer::getTotalNumberOfCals() const {
 
 double CalcTimer::getLimit() const {
 	return limitInMs;
+}
+
+void CalcTimer::changeLimit(double newLimitInMs) {
+	limitInMs = newLimitInMs;
 }
 
 
@@ -497,7 +503,6 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 }
 
 bool ActionStats::operator<(const ActionStats& o) const {
-	// return 1ll * winCount * o.total < 1ll * o.winCount * total;
 	return reward * o.total < o.reward * total;
 }
 
@@ -517,9 +522,12 @@ public:
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
 			double limitInMs, param_t exploreSpeed=1.0);
+
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
+
+	void changeTurnLimit(double newLimitInMs);
 
 private:
 	struct MCTSNode {
@@ -585,7 +593,6 @@ MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState)
 sp<Action> MCTSAgent::getAction(const up<State>&) {
 	timer.startCalculation();
 
-	// for (int i = 0; i < 200; ++i) {
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
 		int delta = defaultPolicy(selectedNode);
@@ -718,6 +725,10 @@ std::vector<KeyValue> MCTSAgent::getDesc() const {
 		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
 	};
+}
+
+void MCTSAgent::changeTurnLimit(double newLimitInMs) {
+	timer.changeLimit(newLimitInMs);
 }
 
 #include <iostream>
@@ -1357,15 +1368,8 @@ void GameRunner::playGame(bool verbose, bool lastGame) {
 
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
-		// std::mksh<RandomAgent>(AGENT1),
-		// std::mksh<FlatMCTSAgent>(AGENT1, 100),
 		std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
-		// std::mksh<RandomAgent>(AGENT2),
 		std::mksh<FlatMCTSAgent>(AGENT2, 100),
-		// std::mksh<MCTSAgent>(AGENT2, game, 100),
-		// std::mksh<RandomAgent>(AGENT2)
-		// std::mksh<FlatMCTSAgent>(AGENT1, 200),
-		// std::mksh<MCTSAgent>(AGENT2, game, 200, 3.0),
 	};
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
 
@@ -1448,10 +1452,11 @@ public:
 	void playGame() const;
 
 private:
-	void print(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& action) const;
+	void printAction(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& action) const;
 
 private:
 	double turnLimitInMs;
+	double firstTurnLimitInMs = 1000;
 };
 
 
@@ -1466,21 +1471,19 @@ void CGRunner::playGame() const {
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		// std::mksh<MCTSAgent>(AGENT2, game, 200, 2.0),
-		std::mksh<MCTSAgent>(AGENT2, game, turnLimitInMs, 0.4),
-		// std::mksh<RandomAgent>(AGENT2),
+		std::mksh<MCTSAgent>(AGENT2, game, firstTurnLimitInMs, 0.4),
 	};
-	int agentCount = sizeof(agents) / sizeof(agents[0]);
 
+	int agentCount = sizeof(agents) / sizeof(agents[0]);
 	int turn = 0; 
+	bool firstTurn = true;
 	while (!game->isTerminal()) {
 		auto& agent = agents[turn];
 		sp<Action> action = agent->getAction(game);
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			// agents[0] = std::mksh<MCTSAgent>(AGENT1, game, 200, 2.0);
-			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, turnLimitInMs, 0.4),
+			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, firstTurnLimitInMs, 0.4),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}
@@ -1488,18 +1491,26 @@ void CGRunner::playGame() const {
 		if (!std::dynamic_pointer_cast<CGAgent>(agent)) {
 			const auto& act = std::dynamic_pointer_cast<UltimateTicTacToe::UltimateTicTacToeAction>(action);
 			assert(act);
-			print(act);
+			printAction(act);
 		}
 	
 		for (int i = 0; i < agentCount; ++i)
 			agents[i]->recordAction(action);
+
+		if (firstTurn) {
+			const auto& ptr = std::dynamic_pointer_cast<MCTSAgent>(agents[turn]);
+			if (ptr) {
+				ptr->changeTurnLimit(turnLimitInMs);
+				firstTurn = false;
+			}
+		}
 
 		game->apply(action);
 		turn ^= 1;
 	}
 }
 
-void CGRunner::print(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& action) const {
+void CGRunner::printAction(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& action) const {
 	int gameRow = action->row, gameCol = action->col;
 	int row = action->action.row, col = action->action.col;
 	int posRow = gameRow * 3 + row;
@@ -1511,7 +1522,7 @@ void CGRunner::print(const sp<UltimateTicTacToe::UltimateTicTacToeAction>& actio
 
 bool verboseFlag = false;
 int numberOfGames = 1;
-double turnLimitInMs = 10;
+double turnLimitInMs = 100;
 
 void parseArgs(int argc, char* argv[]) {
 	static const char helpstr[] =

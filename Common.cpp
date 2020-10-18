@@ -72,3 +72,7 @@ int CalcTimer::getTotalNumberOfCals() const {
 double CalcTimer::getLimit() const {
 	return limitInMs;
 }
+
+void CalcTimer::changeLimit(double newLimitInMs) {
+	limitInMs = newLimitInMs;
+}

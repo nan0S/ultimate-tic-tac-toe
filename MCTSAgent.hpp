@@ -16,6 +16,8 @@ public:
 	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
 
+	void changeTurnLimit(double newLimitInMs);
+
 private:
 	struct MCTSNode {
 		MCTSNode(const up<State>& initialState);

@@ -86,6 +86,8 @@ public:
 	int getTotalNumberOfCals() const;
 	double getLimit() const;
 
+	void changeLimit(double newLimitInMs);
+
 private:
 	double getElapsed() const;
 	
