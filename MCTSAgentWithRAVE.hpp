@@ -1,23 +1,22 @@
-#ifndef MCTS_AGENT_WITH_MAST_HPP
-#define MCTS_AGENT_WITH_MAST_HPP
+#ifndef MCTS_AGENT_HPP
+#define MCTS_AGENT_HPP
 
 #include "Agent.hpp"
 #include "State.hpp"
 
-class MCTSAgentWithMAST : public Agent {
+class MCTSAgent : public Agent {
 public:
 	using param_t = double;
 	using reward_t = State::reward_t;
 
-  	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, param_t exploreSpeed=1.0,
-			param_t epsilon=0.3);
+  	MCTSAgent(AgentID id, const up<State> &initialState,
+			double calcLimitInMs, param_t exploreSpeed=1.0);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
 
-	void changeCalcLimit(double newCalcLimitInMs);
+	void changeCalcLimit(double newLimitInMs);
 
 private:
 	struct MCTSNode {
@@ -26,9 +25,9 @@ private:
 
 		inline bool isTerminal() const;
 		inline bool shouldExpand() const;
-		int expandAndGetIdx();
-		int selectAndGetIdx(param_t exploreSpeed);
-		param_t UCT(const sp<MCTSNode>& v, param_t c) const;
+		sp<MCTSNode> expand();
+		sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
+		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
 		up<State> cloneState();
 		void addReward(reward_t delta);
 		sp<Action> bestAction();
@@ -46,33 +45,18 @@ private:
 		} stats;
 	};
 
-	struct MASTActionStats {
-		reward_t score = 0;
-		int times = 0;
-	};
-
 	sp<MCTSNode> treePolicy();
-	int expandAndGetIdx(const sp<MCTSNode>& node);
+	sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
-	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
 	void backup(sp<MCTSNode> node, reward_t delta);
-
-	void MASTPolicy(reward_t delta);
-	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
 
 private:
 	sp<MCTSNode> root;
 	CalcTimer timer;
 	double exploreSpeed;
-	double epsilon;
 
-	int timesTreeDescended;
+	int descended;
 	int simulationCount = 0;
-	int maxAgentCount;
-	int maxActionCount;
-	std::vector<std::vector<MASTActionStats>> actionsStats;
-	std::vector<std::pair<AgentID, int>> actionHistory;
-	int defaultPolicyLength;
 };
 
-#endif /* MCTS_AGENT_WITH_MAST_HPP */
+#endif /* MCTS_AGENT_HPP */

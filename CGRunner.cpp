@@ -4,6 +4,7 @@
 #include "MCTSAgent.hpp"
 #include "CGAgent.hpp"
 #include "RandomAgent.hpp"
+#include "MCTSAgentWithMAST.hpp"
 
 #include <cassert>
 
@@ -12,10 +13,12 @@ CGRunner::CGRunner(double turnLimitInMs) : turnLimitInMs(turnLimitInMs) {
 }
 
 void CGRunner::playGame() const {
+	using agent_t = MCTSAgentWithMAST;
+
 	up<State> game = std::mku<UltimateTicTacToe>();
 	sp<Agent> agents[] {
 		std::mksh<CGAgent>(AGENT1),
-		std::mksh<MCTSAgent>(AGENT2, game, firstTurnLimitInMs, 0.4),
+		std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, 0.4, 0.7),
 	};
 
 	int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -27,7 +30,7 @@ void CGRunner::playGame() const {
 
 		if (!action) {
 			game = std::mku<UltimateTicTacToe>();
-			agents[0] = std::mksh<MCTSAgent>(AGENT1, game, firstTurnLimitInMs, 0.4),
+			agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, 0.4, 0.7),
 			agents[1] = std::mksh<CGAgent>(AGENT2);
 			continue;
 		}
@@ -42,7 +45,7 @@ void CGRunner::playGame() const {
 			agents[i]->recordAction(action);
 
 		if (firstTurn) {
-			const auto& ptr = std::dynamic_pointer_cast<MCTSAgent>(agents[turn]);
+			const auto& ptr = std::dynamic_pointer_cast<agent_t>(agents[turn]);
 			if (ptr) {
 				ptr->changeCalcLimit(turnLimitInMs);
 				firstTurn = false;

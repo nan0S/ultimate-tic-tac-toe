@@ -17,7 +17,8 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
-	std::fill(actionsStats.begin(), actionsStats.end(), std::vector<MASTActionStats>(maxActionCount));
+	std::fill(actionsStats.begin(), actionsStats.end(),
+			std::vector<MASTActionStats>(maxActionCount));
 }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState)
@@ -45,21 +46,18 @@ sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::treePolicy() {
 	while (!currentNode->isTerminal()) {
 		++timesTreeDescended;
 		if (currentNode->shouldExpand()) {
-			// return expand(currentNode);
 			int expandIdx = expandAndGetIdx(currentNode);
 			assert(expandIdx == int(currentNode->children.size() - 1));
 			assert(expandIdx == currentNode->nextActionToResolveIdx - 1);
-			actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]);
+			actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]->getIdx());
 			return currentNode->children[expandIdx];
 		}
 		
 		int selectedChildIdx = currentNode->selectAndGetIdx(exploreSpeed);
 		assert(selectedChildIdx < int(currentNode->children.size()));
 		assert(selectedChildIdx < int(currentNode->actions.size()));
-		actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]);
+		actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]->getIdx());
 		currentNode = currentNode->children[selectedChildIdx];
-		// currentNode = currentNode->selectChild(exploreSpeed);
-
 	}
 	return currentNode;
 }
@@ -87,33 +85,10 @@ int MCTSAgentWithMAST::MCTSNode::expandAndGetIdx() {
 	return nextActionToResolveIdx++;
 }
 
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::expand(const sp<MCTSNode>& node) {
-	// auto newNode = node->expand();
-	// newNode->parent = node;
-	// return newNode;
-// }
-
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::MCTSNode::expand() {
-	// assert(nextActionToResolveIdx == int(children.size()));
-	// assert(nextActionToResolveIdx < int(actions.size()));
-
-	// const auto& action = actions[nextActionToResolveIdx++];
-	// children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
-	// return children.back();
-// }
-
 MCTSAgentWithMAST::MCTSNode::MCTSNode(up<State>&& initialState)
 	: state(std::move(initialState)), actions(state->getValidActions()) {
 	std::shuffle(actions.begin(), actions.end(), Random::rng);
 }
-
-// sp<MCTSAgentWithMAST::MCTSNode> MCTSAgentWithMAST::MCTSNode::selectChild(param_t exploreSpeed) {
-	// assert(!children.empty());
-	// return *std::max_element(children.begin(), children.end(),
-			// [&exploreSpeed, this](const auto& ch1, const auto& ch2){
-		// return UCT(ch1, exploreSpeed) < UCT(ch2, exploreSpeed);
-	// });
-// }
 
 int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreSpeed) {
 	assert(!children.empty());
@@ -134,7 +109,7 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNode>& initialNode) {
 
      while (!state->isTerminal()) {
 		const auto action = getActionWithDefaultPolicy(state);
-		actionHistory.emplace_back(state->getTurn(), action);
+		actionHistory.emplace_back(state->getTurn(), action->getIdx());
 		state->apply(action);
 		++defaultPolicyLength;
 	}
@@ -180,8 +155,8 @@ void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
 		  (delta == 0 && actionHistory.back().first != getID()) ||
 		   delta == 0.5);
 
-	for (const auto& [agentID, action] : actionHistory)
-		updateActionStat(agentID, action->getIdx(), delta);
+	for (const auto& [agentID, actionIdx] : actionHistory)
+		updateActionStat(agentID, actionIdx, delta);
 
 	actionHistory.clear();
 }
