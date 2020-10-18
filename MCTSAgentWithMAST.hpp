@@ -27,7 +27,7 @@ private:
 		inline bool isTerminal() const;
 		inline bool shouldExpand() const;
 		int expandAndGetIdx();
-		sp<MCTSNode> expand();
+		// sp<MCTSNode> expand();
 		int selectAndGetIdx(param_t exploreSpeed);
 		// sp<MCTSNode> selectChild(param_t exploreSpeed=1.0);
 		param_t UCT(const sp<MCTSNode>& v, param_t c) const;
@@ -55,9 +55,12 @@ private:
 
 	sp<MCTSNode> treePolicy();
 	int expandAndGetIdx(const sp<MCTSNode>& node);
-	sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	// sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
 	void backup(sp<MCTSNode> node, reward_t delta);
+
+	void MASTPolicy(reward_t delta);
+	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
 
 private:
 	sp<MCTSNode> root;
@@ -65,12 +68,13 @@ private:
 	double exploreSpeed;
 	double epsilon;
 
-	int descended;
+	int timesTreeDescended;
 	int simulationCount = 0;
 	int maxAgentCount;
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;
 	std::vector<std::pair<AgentID, sp<Action>>> actionHistory;
+	int defaultPolicyLength;
 };
 
 #endif /* MCTS_AGENT_WITH_MAST_HPP */
