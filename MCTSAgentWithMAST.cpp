@@ -7,13 +7,20 @@ using param_t = MCTSAgentWithMAST::param_t;
 using reward_t = MCTSAgentWithMAST::reward_t;
 
 MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
-		double limitInMs, param_t exploreSpeed, param_t epsilon) :
+		double calcLimitInMs, param_t exploreSpeed, param_t epsilon) :
 	Agent(id),
 	root(std::mksh<MCTSNode>(initialState)),
-	timer(limitInMs),
+	timer(calcLimitInMs),
 	exploreSpeed(exploreSpeed),
-	epsilon(epsilon) {
+	epsilon(epsilon),
+     maxAgentCount(initialState->getAgentCount()),
+	maxActionCount(initialState->getActionCount()),
+	actionsStats(maxAgentCount) {
 
+	// temporary
+	assert(maxAgentCount == 2);
+	assert(maxActionCount == 81);
+	std::fill(actionsStats.begin(), actionsStats.end(), std::vector<MASTActionStats>(maxActionCount));
 }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState)
@@ -31,7 +38,7 @@ sp<Action> MCTSAgentWithMAST::getAction(const up<State>&) {
 		++simulationCount;
 	}
 
-	timer.endCalculation();
+	timer.stopCalculation();
 	return root->bestAction();	
 }
 
@@ -158,6 +165,6 @@ std::vector<KeyValue> MCTSAgentWithMAST::getDesc() const {
 	};
 }
 
-void MCTSAgentWithMAST::changeTurnLimit(double newLimitInMs) {
+void MCTSAgentWithMAST::changeCalcLimit(double newLimitInMs) {
 	timer.changeLimit(newLimitInMs);
 }

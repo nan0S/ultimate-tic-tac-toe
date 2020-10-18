@@ -23,6 +23,10 @@ public:
 	bool isTerminal() const override;
 	void apply(const sp<Action>& act) override;
 
+	constexpr int getAgentCount() const override;
+	constexpr int getActionCount() const override;
+	int getActionIdx(const sp<Action>& action) const override;
+
 	std::vector<sp<Action>> getValidActions() override;
 	bool isValid(const sp<Action>& act) const override;
 

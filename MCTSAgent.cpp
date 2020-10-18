@@ -7,10 +7,10 @@ using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		double limitInMs, param_t exploreSpeed) :
+		double calcLimitInMs, param_t exploreSpeed) :
 	Agent(id),
 	root(std::mksh<MCTSNode>(initialState)),
-	timer(limitInMs),
+	timer(calcLimitInMs),
 	exploreSpeed(exploreSpeed) {
 
 }
@@ -30,7 +30,7 @@ sp<Action> MCTSAgent::getAction(const up<State>&) {
 		++simulationCount;
 	}
 
-	timer.endCalculation();
+	timer.stopCalculation();
 	return root->bestAction();	
 }
 
@@ -157,6 +157,6 @@ std::vector<KeyValue> MCTSAgent::getDesc() const {
 	};
 }
 
-void MCTSAgent::changeTurnLimit(double newLimitInMs) {
+void MCTSAgent::changeCalcLimit(double newLimitInMs) {
 	timer.changeLimit(newLimitInMs);
 }

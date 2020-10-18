@@ -42,7 +42,7 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 
 	int bestIdx = std::max_element(stats.begin(), stats.end()) - stats.begin();
 	const auto& bestAction = validActions[bestIdx];
-	timer.endCalculation();
+	timer.stopCalculation();
 
 	return bestAction;
 }

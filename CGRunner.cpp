@@ -44,7 +44,7 @@ void CGRunner::playGame() const {
 		if (firstTurn) {
 			const auto& ptr = std::dynamic_pointer_cast<MCTSAgent>(agents[turn]);
 			if (ptr) {
-				ptr->changeTurnLimit(turnLimitInMs);
+				ptr->changeCalcLimit(turnLimitInMs);
 				firstTurn = false;
 			}
 		}

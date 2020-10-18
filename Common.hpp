@@ -80,7 +80,7 @@ public:
 
 	void startCalculation();
 	bool isTimeLeft() const;
-	void endCalculation();
+	void stopCalculation();
 
 	double getAverageCalcTime() const;
 	int getTotalNumberOfCals() const;

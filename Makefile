@@ -14,7 +14,8 @@ OBJS = main.o \
 	TicTacToeRealAgent.o \
 	MCTSAgent.o \
 	CGAgent.o \
-	CGRunner.o
+	CGRunner.o \
+	MCTSAgentWithMAST.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3

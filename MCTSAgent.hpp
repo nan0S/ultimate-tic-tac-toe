@@ -10,13 +10,13 @@ public:
 	using reward_t = State::reward_t;
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
-			double limitInMs, param_t exploreSpeed=1.0);
+			double calcLimitInMs, param_t exploreSpeed=1.0);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
 
-	void changeTurnLimit(double newLimitInMs);
+	void changeCalcLimit(double newLimitInMs);
 
 private:
 	struct MCTSNode {

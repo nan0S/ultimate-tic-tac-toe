@@ -53,7 +53,7 @@ double CalcTimer::getElapsed() const {
 }
 
 
-void CalcTimer::endCalculation() {
+void CalcTimer::stopCalculation() {
 	assert(isRunning);
 	totalCalcTime += getElapsed();
 	isRunning = false;

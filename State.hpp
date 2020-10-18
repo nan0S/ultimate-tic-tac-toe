@@ -13,6 +13,10 @@ public:
 	virtual void apply(const sp<Action>& action) = 0;
 	up<State> applyCopy(const sp<Action>& action);
 
+	virtual constexpr int getAgentCount() const = 0;
+	virtual constexpr int getActionCount() const = 0;
+	virtual int getActionIdx(const sp<Action>& action) const = 0;
+
 	virtual std::vector<sp<Action>> getValidActions() = 0;
 	virtual bool isValid(const sp<Action>& action) const = 0;
 

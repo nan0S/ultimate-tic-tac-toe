@@ -10,14 +10,14 @@ public:
 	using reward_t = State::reward_t;
 
   	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
-			double limitInMs, param_t exploreSpeed=1.0,
+			double calcLimitInMs, param_t exploreSpeed=1.0,
 			param_t epsilon=0.3);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
 
-	void changeTurnLimit(double newLimitInMs);
+	void changeCalcLimit(double newCalcLimitInMs);
 
 private:
 	struct MCTSNode {
@@ -46,6 +46,11 @@ private:
 		} stats;
 	};
 
+	struct MASTActionStats {
+		reward_t score = 0;
+		int times = 0;
+	};
+
 	sp<MCTSNode> treePolicy();
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
@@ -59,6 +64,10 @@ private:
 
 	int descended;
 	int simulationCount = 0;
+	int maxAgentCount;
+	int maxActionCount;
+	std::vector<std::vector<MASTActionStats>> actionsStats;
+	std::vector<std::pair<AgentID, sp<Action>>> actionHistory;
 };
 
 #endif /* MCTS_AGENT_WITH_MAST_HPP */

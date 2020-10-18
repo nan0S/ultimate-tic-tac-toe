@@ -248,3 +248,19 @@ bool UltimateTicTacToeAction::equals(const sp<Action>& o) const {
 	return row == oo->row && col == oo->col &&
 		action.row == oo->action.row && action.col == oo->action.col;
 }
+
+constexpr int UltimateTicTacToe::getAgentCount() const {
+	return 2;
+}
+
+constexpr int UltimateTicTacToe::getActionCount() const {
+	return BOARD_SIZE * BOARD_SIZE * BOARD_SIZE * BOARD_SIZE;
+}
+
+int UltimateTicTacToe::getActionIdx(const sp<Action>& action) const {
+	const auto& act = std::dynamic_pointer_cast<UltimateTicTacToeAction>(action);
+	assert(act);
+	int r = act->row * BOARD_SIZE + act->action.row;
+	int c = act->col * BOARD_SIZE + act->action.col;
+	return r * BOARD_SIZE * BOARD_SIZE + c;
+}
