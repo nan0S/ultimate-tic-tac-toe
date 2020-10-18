@@ -1,16 +1,17 @@
-#ifndef MCTS_AGENT_HPP
-#define MCTS_AGENT_HPP
+#ifndef MCTS_AGENT_WITH_MAST_HPP
+#define MCTS_AGENT_WITH_MAST_HPP
 
 #include "Agent.hpp"
 #include "State.hpp"
 
-class MCTSAgent : public Agent {
+class MCTSAgentWithMAST : public Agent {
 public:
 	using param_t = double;
 	using reward_t = State::reward_t;
 
-  	MCTSAgent(AgentID id, const up<State> &initialState,
-			double limitInMs, param_t exploreSpeed=1.0);
+  	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
+			double limitInMs, param_t exploreSpeed=1.0,
+			param_t epsilon=0.3);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
@@ -54,9 +55,10 @@ private:
 	sp<MCTSNode> root;
 	CalcTimer timer;
 	double exploreSpeed;
+	double epsilon;
 
 	int descended;
 	int simulationCount = 0;
 };
 
-#endif /* MCTS_AGENT_HPP */
+#endif /* MCTS_AGENT_WITH_MAST_HPP */
