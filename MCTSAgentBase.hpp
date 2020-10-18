@@ -14,9 +14,7 @@ public:
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
-	virtual std::vector<KeyValue> getDesc() const override;
-
-	void changeCalcLimit(double newLimitInMs);
+	// virtual std::vector<KeyValue> getDesc() const = 0;
 
 protected:
 	struct MCTSNode {
@@ -45,10 +43,10 @@ protected:
 		} stats;
 	};
 
-	sp<MCTSNode> treePolicy();
-	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
-	void backup(sp<MCTSNode> node, reward_t delta);
+	virtual sp<MCTSNode> treePolicy();
+	virtual sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
+	virtual void backup(sp<MCTSNode> node, reward_t delta);
 
 protected:
 	sp<MCTSNode> root;

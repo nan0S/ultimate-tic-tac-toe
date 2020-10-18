@@ -13,7 +13,7 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	timer(calcLimitInMs),
 	exploreSpeed(exploreSpeed),
 	epsilon(epsilon),
-     maxAgentCount(initialState->getAgentCount()),
+	maxAgentCount(initialState->getAgentCount()),
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
@@ -107,7 +107,7 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	auto state = initialNode->cloneState();
 	defaultPolicyLength = 0;
 
-     while (!state->isTerminal()) {
+	while (!state->isTerminal()) {
 		const auto action = getActionWithDefaultPolicy(state);
 		actionHistory.emplace_back(state->getTurn(), action->getIdx());
 		state->apply(action);

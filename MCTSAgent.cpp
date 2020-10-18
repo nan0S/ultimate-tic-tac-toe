@@ -31,7 +31,7 @@ sp<Action> MCTSAgent::getAction(const up<State>&) {
 	}
 
 	timer.stopCalculation();
-	return root->bestAction();	
+	return root->getBestAction();	
 }
 
 sp<MCTSAgent::MCTSNode> MCTSAgent::treePolicy() {
@@ -121,7 +121,7 @@ void MCTSAgent::MCTSNode::addReward(reward_t delta) {
 	++stats.visits;
 }
 
-sp<Action> MCTSAgent::MCTSNode::bestAction() {
+sp<Action> MCTSAgent::MCTSNode::getBestAction() {
 	int bestChildIdx = std::max_element(children.begin(), children.end(),
 			[](const auto& ch1, const auto& ch2){
 		return *ch1 < *ch2;
