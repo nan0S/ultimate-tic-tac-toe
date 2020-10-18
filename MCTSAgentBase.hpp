@@ -52,6 +52,7 @@ protected:
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
 	virtual void backup(sp<MCTSNode> node, reward_t delta) = 0;
+	virtual void postWork();
 
 protected:
 	sp<MCTSNode> root;

@@ -1,49 +1,29 @@
 #ifndef MCTS_AGENT_WITH_MAST_HPP
 #define MCTS_AGENT_WITH_MAST_HPP
 
-#include "Agent.hpp"
+#include "MCTSAgentBase.hpp"
 #include "State.hpp"
 
-class MCTSAgentWithMAST : public Agent {
+class MCTSAgentWithMAST : public MCTSAgentBase {
 public:
-	using param_t = double;
-	using reward_t = State::reward_t;
+	using param_t = MCTSAgentBase::param_t;
+	using reward_t = MCTSAgentBase::reward_t;
+	using MCTSNodeBase = MCTSAgentBase::MCTSNode;
 
 	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, param_t exploreSpeed=1.0,
-			param_t epsilon=0.8);
+			double calcLimitInMs, param_t exploreFactor=1.0,
+			param_t epsilon=0.8, param_t decayFactor=0.2);
 
-	sp<Action> getAction(const up<State> &state) override;
-	void recordAction(const sp<Action> &action) override;
 	std::vector<KeyValue> getDesc() const override;
 
-	void changeCalcLimit(double newCalcLimitInMs);
-
 private:
-	struct MCTSNode {
+	struct MCTSNode : public MCTSNodeBase {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
 
-		inline bool isTerminal() const;
-		inline bool shouldExpand() const;
+		sp<MCTSNodeBase> getChildFromState(up<State>&& state) override;
 		int expandAndGetIdx();
-		int selectAndGetIdx(param_t exploreSpeed);
-		param_t UCT(const sp<MCTSNode>& v, param_t c) const;
-		up<State> cloneState();
-		void addReward(reward_t delta);
-		sp<Action> bestAction();
-		bool operator<(const MCTSNode& o) const;
-
-		up<State> state;
-		wp<MCTSNode> parent;
-		std::vector<sp<MCTSNode>> children;
-		std::vector<sp<Action>> actions;
-		int nextActionToResolveIdx = 0;
-		
-		struct MCTSNodeStats {
-			reward_t score = 0;
-			int visits = 0;
-		} stats;
+		int selectAndGetIdx(param_t exploreFactor);
 	};
 
 	struct MASTActionStats {
@@ -51,23 +31,20 @@ private:
 		int times = 0;
 	};
 
-	sp<MCTSNode> treePolicy();
+	sp<MCTSNodeBase> treePolicy() override;
 	int expandAndGetIdx(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNode>& initialNode);
+	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
-	void backup(sp<MCTSNode> node, reward_t delta);
+	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
 
+	void postWork() override;
 	void MASTPolicy(reward_t delta);
 	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
 
 private:
-	sp<MCTSNode> root;
-	CalcTimer timer;
-	double exploreSpeed;
 	double epsilon;
-
+	double decayFactor;
 	int timesTreeDescended;
-	int simulationCount = 0;
 	int maxAgentCount;
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;

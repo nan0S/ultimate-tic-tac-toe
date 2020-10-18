@@ -35,8 +35,11 @@ sp<Action> MCTSAgentBase::getAction(const up<State>&) {
 		++simulationCount;
 	}
 
+	const auto result = root->getBestAction();
+	postWork();
 	timer.stopCalculation();
-	return root->getBestAction();	
+
+	return result;
 }
 
 bool MCTSAgentBase::MCTSNode::isTerminal() const {
@@ -116,4 +119,8 @@ void MCTSAgentBase::recordAction(const sp<Action>& action) {
 
 void MCTSAgentBase::changeCalcLimit(double newLimitInMs) {
 	timer.changeLimit(newLimitInMs);
+}
+
+void MCTSAgentBase::postWork() {
+
 }
