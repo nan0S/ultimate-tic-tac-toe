@@ -25,7 +25,7 @@ sp<Action> MCTSAgent::getAction(const up<State>&) {
 
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
-		int delta = defaultPolicy(selectedNode);
+		reward_t delta = defaultPolicy(selectedNode);
 		backup(selectedNode, delta);
 		++simulationCount;
 	}
@@ -96,7 +96,6 @@ reward_t MCTSAgent::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	}
 
 	return state->getReward(getID());
-	// return state->didWin(getID());
 }
 
 up<State> MCTSAgent::MCTSNode::cloneState() {
@@ -105,11 +104,13 @@ up<State> MCTSAgent::MCTSNode::cloneState() {
 
 void MCTSAgent::backup(sp<MCTSNode> node, reward_t delta) {
 	int ascended = 0;
+
 	while (node) {
 		node->addReward(delta);
 		node = node->parent.lock();
 		++ascended;
 	}
+
 	assert(descended + 1 == ascended);
 }
 
@@ -149,7 +150,6 @@ void MCTSAgent::recordAction(const sp<Action>& action) {
 std::vector<KeyValue> MCTSAgent::getDesc() const {
 	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
 	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
-		{ "Number of iterations", std::to_string(100) },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
 		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },

@@ -257,11 +257,9 @@ constexpr int UltimateTicTacToe::getActionCount() const {
 	return BOARD_SIZE * BOARD_SIZE * BOARD_SIZE * BOARD_SIZE;
 }
 
-int UltimateTicTacToe::getActionIdx(const sp<Action>& action) const {
-	const auto& act = std::dynamic_pointer_cast<UltimateTicTacToeAction>(action);
-	assert(act);
-	int r = act->row * BOARD_SIZE + act->action.row;
-	int c = act->col * BOARD_SIZE + act->action.col;
+int UltimateTicTacToe::UltimateTicTacToeAction::getIdx() const {
+	int r = row * BOARD_SIZE + action.row;
+	int c = col * BOARD_SIZE + action.col;
 	return r * BOARD_SIZE * BOARD_SIZE + c;
 }
 

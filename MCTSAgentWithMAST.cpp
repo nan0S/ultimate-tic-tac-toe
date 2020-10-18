@@ -17,9 +17,6 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
-	// temporary
-	assert(maxAgentCount == 2);
-	assert(maxActionCount == 81);
 	std::fill(actionsStats.begin(), actionsStats.end(), std::vector<MASTActionStats>(maxActionCount));
 }
 
@@ -33,7 +30,7 @@ sp<Action> MCTSAgentWithMAST::getAction(const up<State>&) {
 
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
-		int delta = defaultPolicy(selectedNode);
+		reward_t delta = defaultPolicy(selectedNode);
 		backup(selectedNode, delta);
 		++simulationCount;
 	}
@@ -136,17 +133,28 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNode>& initialNode) {
 	defaultPolicyLength = 0;
 
      while (!state->isTerminal()) {
-		auto actions = state->getValidActions();
-		const auto& action = Random::choice(actions);
-		
+		const auto action = getActionWithDefaultPolicy(state);
 		actionHistory.emplace_back(state->getTurn(), action);
 		state->apply(action);
-
 		++defaultPolicyLength;
 	}
 
 	return state->getReward(getID());
-	// return state->didWin(getID());
+}
+
+sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state) {
+	auto actions = state->getValidActions();
+	assert(!actions.empty());
+
+	if (Random::rand(1.0) <= epsilon)
+		return Random::choice(actions);
+
+	return *std::max_element(actions.begin(), actions.end(),
+			[&state, this](const sp<Action>& a1, const sp<Action>& a2){
+		const auto& s1 = actionsStats[state->getTurn()][a1->getIdx()];
+		const auto& s2 = actionsStats[state->getTurn()][a2->getIdx()];
+		return s1.score * s2.times < s2.score * s1.times;
+	});
 }
 
 up<State> MCTSAgentWithMAST::MCTSNode::cloneState() {
@@ -169,13 +177,11 @@ void MCTSAgentWithMAST::backup(sp<MCTSNode> node, reward_t delta) {
 void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
 	assert(defaultPolicyLength + timesTreeDescended == int(actionHistory.size()));
 	assert((delta == 1 && actionHistory.back().first == getID()) || 
-			(delta == -1 && actionHistory.back().first != getID()) ||
-			delta == 0);
+		  (delta == 0 && actionHistory.back().first != getID()) ||
+		   delta == 0.5);
 
-	for (const auto& [agentID, action] : actionHistory) {
-		int actionIdx = root->state->getActionIdx(action);
-		updateActionStat(agentID, actionIdx, delta);
-	}
+	for (const auto& [agentID, action] : actionHistory)
+		updateActionStat(agentID, action->getIdx(), delta);
 
 	actionHistory.clear();
 }
@@ -224,12 +230,12 @@ void MCTSAgentWithMAST::recordAction(const sp<Action>& action) {
 
 std::vector<KeyValue> MCTSAgentWithMAST::getDesc() const {
 	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
-	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
-		{ "Number of iterations", std::to_string(100) },
+	return { { "MCTS Agent with UCT selection and MAST policy with epsilon-greedy simulation.", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
 		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
-		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) }
+		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreSpeed) },
+		{ "Epsilon constant (E) in MAST default policy", std::to_string(epsilon) }
 	};
 }
 

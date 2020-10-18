@@ -5,6 +5,7 @@
 
 struct Action {
 	virtual bool equals(const sp<Action>& o) const = 0;
+	virtual int getIdx() const = 0;
 	virtual ~Action() = default;
 };
 

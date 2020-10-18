@@ -13,7 +13,9 @@ public:
 	struct UltimateTicTacToeAction : public Action {
 		UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 				const TicTacToe::TicTacToeAction& action);
+
 		bool equals(const sp<Action>& o) const override;
+		int getIdx() const override;
 
 		AgentID agentID;
 		int row, col;
@@ -25,7 +27,6 @@ public:
 
 	constexpr int getAgentCount() const override;
 	constexpr int getActionCount() const override;
-	int getActionIdx(const sp<Action>& action) const override;
 
 	std::vector<sp<Action>> getValidActions() override;
 	bool isValid(const sp<Action>& act) const override;
