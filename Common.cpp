@@ -73,6 +73,10 @@ double CalcTimer::getLimit() const {
 	return limitInMs;
 }
 
+double CalcTimer::getTotalCalcTime() const {
+	return totalCalcTime;
+}
+
 void CalcTimer::changeLimit(double newLimitInMs) {
 	limitInMs = newLimitInMs;
 }

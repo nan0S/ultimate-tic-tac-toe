@@ -22,7 +22,7 @@ protected:
 		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
 
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		void addReward(reward_t delta);
+		void addReward(reward_t delta, AgentID whoIsPlaying);
 		sp<Action> getBestAction();
 		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;

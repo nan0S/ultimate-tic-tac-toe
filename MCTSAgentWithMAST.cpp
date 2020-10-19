@@ -122,7 +122,7 @@ void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node, reward_t delta) {
 	int timesTreeAscended = 0;
 
 	while (node) {
-		node->addReward(delta);
+		node->addReward(delta, getID());
 		node = node->parent.lock();
 		++timesTreeAscended;
 	}
@@ -133,6 +133,7 @@ void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node, reward_t delta) {
 
 void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
 	assert(defaultPolicyLength + timesTreeDescended == int(actionHistory.size()));
+	// temporary
 	assert((delta == 1 && actionHistory.back().first == getID()) || 
 		  (delta == 0 && actionHistory.back().first != getID()) ||
 		   delta == 0.5);
@@ -159,11 +160,15 @@ void MCTSAgentWithMAST::postWork() {
 }
 
 std::vector<KeyValue> MCTSAgentWithMAST::getDesc() const {
-	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
+	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "MCTS Agent with UCT selection and MAST policy with epsilon-greedy simulation.", "" },
+		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
+		{ "", "" },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) },
 		{ "Epsilon constant (E) in MAST default policy", std::to_string(epsilon) },
 		{ "Decay factor (gamma) in MAST global action table", std::to_string(decayFactor) }

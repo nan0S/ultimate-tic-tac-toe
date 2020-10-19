@@ -85,6 +85,7 @@ public:
 	double getAverageCalcTime() const;
 	int getTotalNumberOfCals() const;
 	double getLimit() const;
+	double getTotalCalcTime() const;
 
 	void changeLimit(double newLimitInMs);
 

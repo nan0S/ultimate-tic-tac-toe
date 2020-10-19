@@ -83,6 +83,7 @@ public:
 	double getAverageCalcTime() const;
 	int getTotalNumberOfCals() const;
 	double getLimit() const;
+	double getTotalCalcTime() const;
 
 	void changeLimit(double newLimitInMs);
 
@@ -169,6 +170,10 @@ int CalcTimer::getTotalNumberOfCals() const {
 
 double CalcTimer::getLimit() const {
 	return limitInMs;
+}
+
+double CalcTimer::getTotalCalcTime() const {
+	return totalCalcTime;
 }
 
 void CalcTimer::changeLimit(double newLimitInMs) {
@@ -390,7 +395,7 @@ void StatSystem::printGeneral() const {
 void StatSystem::printDescription() const {
 	for (const auto& [label, vals]: desc)
 		if (!vals.empty()) {
-			std::cout << '\n' << label << ":\n";
+			std::cout << '\n' << label << ":\n\n";
 			for (const auto& [key, val] : vals)
 				if (val == "")
 					std::cout << std::string(3, ' ') << key << '\n';
@@ -470,6 +475,7 @@ public:
 private:
 	CalcTimer timer;
 	std::vector<ActionStats> stats;
+	int simulationCount = 0;
 };
 
 
@@ -510,6 +516,8 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 		// stats[randActionIdx].reward += nState->getReward(getID());
 		if (nState->didWin(getID()))
 			++stats[randActionIdx].reward;
+		
+		++simulationCount;
 	}
 
 	int bestIdx = std::max_element(stats.begin(), stats.end()) - stats.begin();
@@ -524,10 +532,14 @@ bool ActionStats::operator<(const ActionStats& o) const {
 }
 
 std::vector<KeyValue> FlatMCTSAgent::getDesc() const {
+	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "Flat MCTS agent.", "" },
-		{ "Number of MCTS iterations", std::to_string(100) },
+		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
 	};
 }
 
@@ -550,7 +562,7 @@ protected:
 		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
 
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		void addReward(reward_t delta);
+		void addReward(reward_t delta, AgentID whoseTurn);
 		sp<Action> getBestAction();
 		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;
@@ -675,8 +687,8 @@ up<State> MCTSAgentBase::MCTSNode::cloneState() {
 	return state->clone();
 }
 
-void MCTSAgentBase::MCTSNode::addReward(reward_t delta) {
-	stats.score += delta;
+void MCTSAgentBase::MCTSNode::addReward(reward_t delta, AgentID whoseTurn) {
+	stats.score += whoseTurn != state->getTurn() ? delta : 1 - delta;
 	++stats.visits;
 }
 
@@ -794,7 +806,7 @@ void MCTSAgent::backup(sp<MCTSNodeBase> node, reward_t delta) {
 	int ascended = 0;
 
 	while (node) {
-		node->addReward(delta);
+		node->addReward(delta, getID());
 		node = node->parent.lock();
 		++ascended;
 	}
@@ -807,12 +819,16 @@ sp<MCTSNodeBase> MCTSAgent::MCTSNode::getChildFromState(up<State>&& state) {
 }
 
 std::vector<KeyValue> MCTSAgent::getDesc() const {
-	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
+	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
+		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
-		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) }
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
+		{ "", "" },
+		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) },
 	};
 }
 
@@ -987,7 +1003,7 @@ void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node, reward_t delta) {
 	int timesTreeAscended = 0;
 
 	while (node) {
-		node->addReward(delta);
+		node->addReward(delta, getID());
 		node = node->parent.lock();
 		++timesTreeAscended;
 	}
@@ -1024,11 +1040,15 @@ void MCTSAgentWithMAST::postWork() {
 }
 
 std::vector<KeyValue> MCTSAgentWithMAST::getDesc() const {
-	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
+	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "MCTS Agent with UCT selection and MAST policy with epsilon-greedy simulation.", "" },
+		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
+		{ "", "" },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) },
 		{ "Epsilon constant (E) in MAST default policy", std::to_string(epsilon) },
 		{ "Decay factor (gamma) in MAST global action table", std::to_string(decayFactor) }
@@ -1888,7 +1908,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, FlatMCTSAgent>(
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgent, FlatMCTSAgent>(
 		turnLimitInMs, {
 			{ "exploreFactor", 0.4 },
 			{ "epsilon", 0.8 },
@@ -1896,11 +1916,13 @@ int main(int argc, char* argv[]) {
 		},
 		{ { "exploreFactor", 0.4 } }
 	);
-	gameRunner.playGames(numberOfGames);
+	gameRunner.playGames(numberOfGames, verboseFlag);
 #else
-	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgent>(
+	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgentWithMAST>(
 		turnLimitInMs, {
-			{ "exploreFactor", 0.4 }
+			{ "exploreFactor", 0.4 },
+			{ "epsilon", 0.8 },
+			{ "decayFactor", 0.6 }
 		}
 	);
 	cgRunner.playGame();

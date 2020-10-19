@@ -26,6 +26,7 @@ public:
 private:
 	CalcTimer timer;
 	std::vector<ActionStats> stats;
+	int simulationCount = 0;
 };
 
 #endif /* MCTS_AGENT_HPP */

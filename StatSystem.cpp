@@ -59,7 +59,7 @@ void StatSystem::printGeneral() const {
 void StatSystem::printDescription() const {
 	for (const auto& [label, vals]: desc)
 		if (!vals.empty()) {
-			std::cout << '\n' << label << ":\n";
+			std::cout << '\n' << label << ":\n\n";
 			for (const auto& [key, val] : vals)
 				if (val == "")
 					std::cout << std::string(3, ' ') << key << '\n';

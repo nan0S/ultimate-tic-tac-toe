@@ -52,7 +52,7 @@ void MCTSAgent::backup(sp<MCTSNodeBase> node, reward_t delta) {
 	int ascended = 0;
 
 	while (node) {
-		node->addReward(delta);
+		node->addReward(delta, getID());
 		node = node->parent.lock();
 		++ascended;
 	}
@@ -65,11 +65,15 @@ sp<MCTSNodeBase> MCTSAgent::MCTSNode::getChildFromState(up<State>&& state) {
 }
 
 std::vector<KeyValue> MCTSAgent::getDesc() const {
-	auto averageSimulationCount = double(simulationCount) / timer.getTotalNumberOfCals();
+	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "MCTS Agent with UCT selection and random simulation policy.", "" },
+		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) },
-		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) }
+		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
+		{ "", "" },
+		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) },
 	};
 }

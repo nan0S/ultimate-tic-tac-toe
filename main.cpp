@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, FlatMCTSAgent>(
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, MCTSAgent>(
 		turnLimitInMs, {
 			{ "exploreFactor", 0.4 },
 			{ "epsilon", 0.8 },
@@ -63,11 +63,13 @@ int main(int argc, char* argv[]) {
 		},
 		{ { "exploreFactor", 0.4 } }
 	);
-	gameRunner.playGames(numberOfGames);
+	gameRunner.playGames(numberOfGames, verboseFlag);
 #else
-	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgent>(
+	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgentWithMAST>(
 		turnLimitInMs, {
-			{ "exploreFactor", 0.4 }
+			{ "exploreFactor", 0.4 },
+			{ "epsilon", 0.8 },
+			{ "decayFactor", 0.6 }
 		}
 	);
 	cgRunner.playGame();

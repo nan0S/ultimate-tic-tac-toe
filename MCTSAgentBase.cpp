@@ -83,8 +83,8 @@ up<State> MCTSAgentBase::MCTSNode::cloneState() {
 	return state->clone();
 }
 
-void MCTSAgentBase::MCTSNode::addReward(reward_t delta) {
-	stats.score += delta;
+void MCTSAgentBase::MCTSNode::addReward(reward_t delta, AgentID whoIsPlaying) {
+	stats.score += whoIsPlaying != state->getTurn() ? delta : 1 - delta;
 	++stats.visits;
 }
 
