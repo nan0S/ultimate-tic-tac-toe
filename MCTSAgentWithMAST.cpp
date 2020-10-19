@@ -7,7 +7,7 @@
 using param_t = MCTSAgentWithMAST::param_t;
 using reward_t = MCTSAgentWithMAST::reward_t;
 using MCTSNodeBase = MCTSAgentWithMAST::MCTSNodeBase;
-
+using MCTSNode = MCTSAgentWithMAST::MCTSNode;
 
 MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
 		double calcLimitInMs, const AgentArgs& args) :
@@ -35,42 +35,75 @@ sp<MCTSNodeBase> MCTSAgentWithMAST::treePolicy() {
 		++timesTreeDescended;
 
 		if (currentNode->shouldExpand()) {
-			int expandIdx = expandAndGetIdx(currentNode);
-			assert(expandIdx == int(currentNode->children.size() - 1));
-			assert(expandIdx == currentNode->nextActionToResolveIdx - 1);
+			return expand(currentNode);
+			// int expandIdx = expandGetIdx(currentNode);
+			// assert(expandIdx == int(currentNode->children.size() - 1));
+			// assert(expandIdx == currentNode->nextActionToResolveIdx - 1);
 
-			actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]->getIdx());
-			return currentNode->children[expandIdx];
+			// actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[expandIdx]->getIdx());
+			// return currentNode->children[expandIdx];
 		}
 		
-		int selectedChildIdx = currentNode->selectAndGetIdx(exploreFactor);
-		assert(selectedChildIdx < int(currentNode->children.size()));
-		assert(selectedChildIdx < int(currentNode->actions.size()));
-
-		actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]->getIdx());
-		currentNode = std::dynamic_pointer_cast<MCTSNode>(currentNode->children[selectedChildIdx]);
+		currentNode = std::dynamic_pointer_cast<MCTSNode>(select(currentNode));
 		assert(currentNode);
+		
+		// int selectedChildIdx = currentNode->selectAndGetIdx(exploreFactor);
+		// assert(selectedChildIdx < int(currentNode->children.size()));
+		// assert(selectedChildIdx < int(currentNode->actions.size()));
+
+		// actionHistory.emplace_back(currentNode->state->getTurn(), currentNode->actions[selectedChildIdx]->getIdx());
+		// currentNode = std::dynamic_pointer_cast<MCTSNode>(currentNode->children[selectedChildIdx]);
+		// assert(currentNode);
 	}
 
 	return currentNode;
 }
 
-int MCTSAgentWithMAST::expandAndGetIdx(const sp<MCTSNode>& node) {
-	int expandedIdx = node->expandAndGetIdx();
-	node->children[expandedIdx]->parent = node;
-	return expandedIdx;
+sp<MCTSNodeBase> MCTSAgentWithMAST::expand(const sp<MCTSNodeBase>& node) {
+	int expandIdx = expandGetIdx(node);
+	assert(expandIdx == int(node->children.size() - 1));
+	assert(expandIdx == node->nextActionToResolveIdx - 1);
+
+	actionHistory.emplace_back(node->state->getTurn(), node->actions[expandIdx]->getIdx());
+	return node->children[expandIdx];
 }
 
-int MCTSAgentWithMAST::MCTSNode::expandAndGetIdx() {
-	assert(nextActionToResolveIdx == int(children.size()));
-	assert(nextActionToResolveIdx < int(actions.size()));
+sp<MCTSNodeBase> MCTSAgentWithMAST::select(const sp<MCTSNodeBase>& node) {
+	int selectIdx = selectGetIdx(node);
+	assert(selectIdx < int(node->children.size()));
+	assert(selectIdx < int(node->actions.size()));
 
-	const auto& action = actions[nextActionToResolveIdx];
-	children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
-	return nextActionToResolveIdx++;
+	actionHistory.emplace_back(node->state->getTurn(),
+					    node->actions[selectIdx]->getIdx());
+	return node->children[selectIdx];
 }
 
-sp<MCTSNodeBase> MCTSAgentWithMAST::MCTSNode::getChildFromState(up<State>&& state) {
+param_t MCTSAgentWithMAST::eval(const sp<MCTSNodeBase>& node) {
+	const auto& v = std::dynamic_pointer_cast<MCTSNode>(node);
+	const auto& p = std::dynamic_pointer_cast<MCTSNode>(node->parent.lock());
+	assert(v);
+	assert(p);
+	param_t exploitationFactor = param_t(v->stats.score) / v->stats.visits;
+	param_t explorationFactor = std::sqrt(2.0 * std::log(p->stats.visits) / v->stats.visits);
+	return exploitationFactor + exploreFactor * explorationFactor;
+}
+
+// int MCTSAgentWithMAST::expandAndGetIdx(const sp<MCTSNode>& node) {
+	// int expandedIdx = node->expandAndGetIdx();
+	// node->children[expandedIdx]->parent = node;
+	// return expandedIdx;
+// }
+
+// int MCTSAgentWithMAST::MCTSNode::expandAndGetIdx() {
+	// assert(nextActionToResolveIdx == int(children.size()));
+	// assert(nextActionToResolveIdx < int(actions.size()));
+
+	// const auto& action = actions[nextActionToResolveIdx];
+	// children.push_back(std::mksh<MCTSNode>(state->applyCopy(action)));
+	// return nextActionToResolveIdx++;
+// }
+
+sp<MCTSNodeBase> MCTSAgentWithMAST::MCTSNode::makeChildFromState(up<State>&& state) {
 	return std::mksh<MCTSNode>(std::move(state));
 }
 
@@ -79,13 +112,13 @@ MCTSAgentWithMAST::MCTSNode::MCTSNode(up<State>&& initialState) :
 
 }
 
-int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreFactor) {
-	assert(!children.empty());
-	return std::max_element(children.begin(), children.end(),
-			[&exploreFactor, this](const auto& ch1, const auto& ch2){
-		return UCT(ch1, exploreFactor) < UCT(ch2, exploreFactor);
-	}) - children.begin();
-}
+// int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreFactor) {
+	// assert(!children.empty());
+	// return std::max_element(children.begin(), children.end(),
+			// [&exploreFactor, this](const auto& ch1, const auto& ch2){
+		// return UCT(ch1, exploreFactor) < UCT(ch2, exploreFactor);
+	// }) - children.begin();
+// }
 
 void MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
@@ -136,10 +169,8 @@ void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node) {
 
 void MCTSAgentWithMAST::MASTPolicy() {
 	assert(defaultPolicyLength + timesTreeDescended == int(actionHistory.size()));
-
 	for (const auto& [agentID, actionIdx] : actionHistory)
 		updateActionStat(agentID, actionIdx);
-
 	actionHistory.clear();
 }
 
@@ -148,7 +179,6 @@ void MCTSAgentWithMAST::updateActionStat(AgentID id, int actionIdx) {
 	assert(actionIdx < int(actionsStats[id].size()));
 
 	auto& statToUpdate = actionsStats[id][actionIdx];
-	// we assume there are 2 agents, with rewards [0, 1]
 	statToUpdate.score += agentRewards[id];
 	++statToUpdate.times;
 }

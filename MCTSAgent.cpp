@@ -4,6 +4,7 @@
 
 using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
+using MCTSNode = MCTSAgent::MCTSNode;
 using MCTSNodeBase = MCTSAgent::MCTSNodeBase;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
@@ -12,8 +13,7 @@ MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState,
 
 }
 
-MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) :
-	MCTSNodeBase(initialState) {
+MCTSNode::MCTSNode(const up<State>& initialState) : MCTSNodeBase(initialState) {
 
 }
 
@@ -25,15 +25,20 @@ sp<MCTSNodeBase> MCTSAgent::treePolicy() {
 		++descended;
 		if (currentNode->shouldExpand())
 			return expand(currentNode);
-		currentNode = currentNode->selectChild(exploreFactor);
+		currentNode = select(currentNode);
 	}
 
 	return currentNode;
 }
 
-MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
-	: MCTSNodeBase(std::move(initialState)) {
-
+param_t MCTSAgent::eval(const sp<MCTSNodeBase>& node) {
+	const auto& v = std::dynamic_pointer_cast<MCTSNode>(node);
+	const auto& p = std::dynamic_pointer_cast<MCTSNode>(node->parent.lock());
+	assert(v);
+	assert(p);
+	param_t exploitationFactor = param_t(v->stats.score) / v->stats.visits;
+	param_t explorationFactor = std::sqrt(2.0 * std::log(p->stats.visits) / v->stats.visits);
+	return exploitationFactor + exploreFactor * explorationFactor;
 }
 
 void MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
@@ -47,8 +52,6 @@ void MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 
 	for (int i = 0; i < maxAgentCount; ++i)
 		agentRewards[i] = state->getReward(AgentID(i));
-	
-	// return state->getReward(getID());
 }
 
 void MCTSAgent::backup(sp<MCTSNodeBase> node) {
@@ -65,8 +68,12 @@ void MCTSAgent::backup(sp<MCTSNodeBase> node) {
 	assert(descended + 1 == ascended);
 }
 
-sp<MCTSNodeBase> MCTSAgent::MCTSNode::getChildFromState(up<State>&& state) {
+sp<MCTSNodeBase> MCTSNode::makeChildFromState(up<State>&& state) {
 	return std::mksh<MCTSNode>(std::move(state));
+}
+
+MCTSNode::MCTSNode(up<State>&& initialState) : MCTSNodeBase(std::move(initialState)) {
+
 }
 
 std::vector<KeyValue> MCTSAgent::getDesc() const {

@@ -16,12 +16,9 @@ protected:
 
 		bool isTerminal() const;
 		bool shouldExpand() const;
-		sp<MCTSNode> expand();
-		sp<MCTSNode> selectChild(param_t exploreFactor=1.0);
+		int expandGetIdx();
 
-		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
-
-		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
+		virtual sp<MCTSNode> makeChildFromState(up<State>&& state) = 0;
 		void addReward(reward_t agentPlayingReward, AgentID whoIsPlaying);
 		sp<Action> getBestAction();
 		up<State> cloneState();
@@ -40,6 +37,8 @@ protected:
 	};
 
 public:
+	using MCTSNode = MCTSNode;
+
   	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
 		double calcLimitInMs, const AgentArgs& args);
 
@@ -49,7 +48,11 @@ public:
 
 protected:
 	virtual sp<MCTSNode> treePolicy() = 0;
-	sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	virtual sp<MCTSNode> expand(const sp<MCTSNode>& node);
+	int expandGetIdx(const sp<MCTSNode>& node);
+	virtual sp<MCTSNode> select(const sp<MCTSNode>& node);
+	int selectGetIdx(const sp<MCTSNode>& node);
+	virtual param_t eval(const sp<MCTSNode>& node) = 0;
 	virtual void defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
 	virtual void backup(sp<MCTSNode> node) = 0;
 	virtual void postWork();
@@ -59,7 +62,7 @@ protected:
 	CalcTimer timer;
 	int maxAgentCount;
 	std::vector<reward_t> agentRewards;
-	double exploreFactor;
+	param_t exploreFactor;
 
 	int descended;
 	int simulationCount = 0;

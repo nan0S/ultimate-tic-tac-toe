@@ -16,13 +16,18 @@ public:
 	std::vector<KeyValue> getDesc() const override;
 
 protected:
-	struct MCTSNode : public MCTSAgentBase::MCTSNode {
+	struct MCTSNode : public MCTSNodeBase {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
-		sp<MCTSNodeBase> getChildFromState(up<State>&& state) override;
+		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 	};
 
-	sp<MCTSAgentBase::MCTSNode> treePolicy() override;
+public:
+	using MCTSNode = MCTSNode;
+
+protected:
+	sp<MCTSNodeBase> treePolicy() override;
+	param_t eval(const sp<MCTSNodeBase>& node) override;
 	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	void backup(sp<MCTSNodeBase> node) override;
 };
