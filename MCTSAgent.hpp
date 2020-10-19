@@ -23,8 +23,8 @@ protected:
 	};
 
 	sp<MCTSAgentBase::MCTSNode> treePolicy() override;
-	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
-	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void backup(sp<MCTSNodeBase> node) override;
 };
 
 #endif /* MCTS_AGENT_HPP */

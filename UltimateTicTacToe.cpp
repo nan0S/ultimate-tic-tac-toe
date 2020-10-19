@@ -162,11 +162,11 @@ bool UltimateTicTacToe::isValid(const sp<Action>& act) const {
 	return isLegal(action);
 }
 
-bool UltimateTicTacToe::didWin(AgentID id) const {
+bool UltimateTicTacToe::didWin(AgentID id) {
 	return id == getWinner();
 }
 
-reward_t UltimateTicTacToe::getReward(AgentID id) const {
+reward_t UltimateTicTacToe::getReward(AgentID id) {
 	auto winner = getWinner();
 	if (winner == NONE)
 		return 0.5;
@@ -177,21 +177,30 @@ up<State> UltimateTicTacToe::clone() {
 	return up<State>(new UltimateTicTacToe(*this));
 }
 
-AgentID UltimateTicTacToe::getWinner() const {
+AgentID UltimateTicTacToe::getWinner() {
 	PROFILE_FUNCTION();
+	
+	if (isWinnerSet)
+		return winner;
 
 	for (int i = 0; i < BOARD_SIZE; ++i) {
 		if (isRowDone(i))
-			return board[i][0].getWinner();
+			return setAndReturnWinner(board[i][0].getWinner());
 		if (isColDone(i))
-			return board[0][i].getWinner();
+			return setAndReturnWinner(board[0][i].getWinner());
 	}
 	if (isDiag1Done())
-		return board[0][0].getWinner();
+		return setAndReturnWinner(board[0][0].getWinner());
 	if (isDiag2Done())
-		return board[0][BOARD_SIZE - 1].getWinner();
+		return setAndReturnWinner(board[0][BOARD_SIZE - 1].getWinner());
 	assert(isAllTerminal());
-	return NONE; 
+	return setAndReturnWinner(NONE);
+}
+
+AgentID UltimateTicTacToe::setAndReturnWinner(AgentID winner) {
+	assert(!isWinnerSet);
+	isWinnerSet = true;
+	return this->winner = winner;
 }
 
 std::ostream& UltimateTicTacToe::print(std::ostream& out) const {
@@ -226,7 +235,7 @@ void UltimateTicTacToe::printLineSep(std::ostream& out) const {
 	out << "+\n";
 }
 
-std::string UltimateTicTacToe::getWinnerName() const {
+std::string UltimateTicTacToe::getWinnerName() {
 	PROFILE_FUNCTION();
 
 	assert(isTerminal());

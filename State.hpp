@@ -20,13 +20,13 @@ public:
 	virtual bool isValid(const sp<Action>& action) const = 0;
 
 	virtual up<State> clone() = 0;
-	virtual bool didWin(AgentID id) const = 0;
-	virtual reward_t getReward(AgentID id) const = 0;
+	virtual bool didWin(AgentID id) = 0;
+	virtual reward_t getReward(AgentID id) = 0;
 	virtual AgentID getTurn() const = 0;
 
 	virtual std::ostream& print(std::ostream& out) const = 0;
 	friend std::ostream& operator<<(std::ostream& out, const State& state);
-	virtual std::string getWinnerName() const = 0;
+	virtual std::string getWinnerName() = 0;
 
 	virtual ~State() = default;
 };

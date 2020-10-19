@@ -22,7 +22,7 @@ protected:
 		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
 
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		void addReward(reward_t delta, AgentID whoIsPlaying);
+		void addReward(reward_t agentPlayingReward, AgentID whoIsPlaying);
 		sp<Action> getBestAction();
 		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;
@@ -50,13 +50,15 @@ public:
 protected:
 	virtual sp<MCTSNode> treePolicy() = 0;
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
-	virtual void backup(sp<MCTSNode> node, reward_t delta) = 0;
+	virtual void defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
+	virtual void backup(sp<MCTSNode> node) = 0;
 	virtual void postWork();
 
 protected:
 	sp<MCTSNode> root;
 	CalcTimer timer;
+	int maxAgentCount;
+	std::vector<reward_t> agentRewards;
 	double exploreFactor;
 
 	int descended;

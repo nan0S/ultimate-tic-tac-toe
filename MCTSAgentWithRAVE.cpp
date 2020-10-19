@@ -35,9 +35,11 @@ sp<MCTSNodeBase> MCTSAgentWithRAVE::treePolicy() {
 			assert(expandIdx == int(currentNode->children.size() - 1));
 			assert(expandIdx == currentNode->nextActionToResolveIdx - 1);
 
-			treeActionHistory.emplace_back(
-				currentNode->state->getTurn(),
-				currentNode->actions[expandIdx]->getIdx());
+			treeActionHistory.emplace_back(currentNode->actions[expandIdx]->getIdx());
+
+			// treeActionHistory.emplace_back(
+				// currentNode->state->getTurn(),
+				// currentNode->actions[expandIdx]->getIdx());
 
 			return currentNode->children[expandIdx];
 		}

@@ -276,13 +276,13 @@ public:
 	virtual bool isValid(const sp<Action>& action) const = 0;
 
 	virtual up<State> clone() = 0;
-	virtual bool didWin(AgentID id) const = 0;
-	virtual reward_t getReward(AgentID id) const = 0;
+	virtual bool didWin(AgentID id) = 0;
+	virtual reward_t getReward(AgentID id) = 0;
 	virtual AgentID getTurn() const = 0;
 
 	virtual std::ostream& print(std::ostream& out) const = 0;
 	friend std::ostream& operator<<(std::ostream& out, const State& state);
-	virtual std::string getWinnerName() const = 0;
+	virtual std::string getWinnerName() = 0;
 
 	virtual ~State() = default;
 };
@@ -562,7 +562,7 @@ protected:
 		virtual sp<MCTSNode> getChildFromState(up<State>&& state) = 0;
 
 		param_t UCT(const sp<MCTSNode>& v, param_t c=1.0) const;
-		void addReward(reward_t delta, AgentID whoseTurn);
+		void addReward(reward_t agentPlayingReward, AgentID whoIsPlaying);
 		sp<Action> getBestAction();
 		up<State> cloneState();
 		bool operator<(const MCTSNode& o) const;
@@ -590,13 +590,15 @@ public:
 protected:
 	virtual sp<MCTSNode> treePolicy() = 0;
 	sp<MCTSNode> expand(const sp<MCTSNode>& node);
-	virtual reward_t defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
-	virtual void backup(sp<MCTSNode> node, reward_t delta) = 0;
+	virtual void defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
+	virtual void backup(sp<MCTSNode> node) = 0;
 	virtual void postWork();
 
 protected:
 	sp<MCTSNode> root;
 	CalcTimer timer;
+	int maxAgentCount;
+	std::vector<reward_t> agentRewards;
 	double exploreFactor;
 
 	int descended;
@@ -615,6 +617,8 @@ MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root,
 	Agent(id),
 	root(std::move(root)),
 	timer(calcLimitInMs),
+	maxAgentCount(this->root->state->getAgentCount()),
+	agentRewards(maxAgentCount),
 	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)) {
 
 }
@@ -634,8 +638,8 @@ sp<Action> MCTSAgentBase::getAction(const up<State>&) {
 
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
-		reward_t delta = defaultPolicy(selectedNode);
-		backup(selectedNode, delta);
+		defaultPolicy(selectedNode);
+		backup(selectedNode);
 		++simulationCount;
 	}
 
@@ -687,9 +691,9 @@ up<State> MCTSAgentBase::MCTSNode::cloneState() {
 	return state->clone();
 }
 
-void MCTSAgentBase::MCTSNode::addReward(reward_t delta, AgentID whoseTurn) {
-	stats.score += whoseTurn != state->getTurn() ? delta : 1 - delta;
-	++stats.visits;
+void MCTSAgentBase::MCTSNode::addReward(reward_t agentPlayingReward, AgentID whoIsPlaying) {
+  stats.score += whoIsPlaying != state->getTurn() ? agentPlayingReward : 1 - agentPlayingReward;
+  ++stats.visits;
 }
 
 sp<Action> MCTSAgentBase::MCTSNode::getBestAction() {
@@ -749,8 +753,8 @@ protected:
 	};
 
 	sp<MCTSAgentBase::MCTSNode> treePolicy() override;
-	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
-	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void backup(sp<MCTSNodeBase> node) override;
 };
 
 
@@ -790,7 +794,7 @@ MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
 
 }
 
-reward_t MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
+void MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
 
      while (!state->isTerminal()) {
@@ -799,14 +803,19 @@ reward_t MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 		state->apply(action);
 	}
 
-	return state->getReward(getID());
+	for (int i = 0; i < maxAgentCount; ++i)
+		agentRewards[i] = state->getReward(AgentID(i));
+	
+	// return state->getReward(getID());
 }
 
-void MCTSAgent::backup(sp<MCTSNodeBase> node, reward_t delta) {
+void MCTSAgent::backup(sp<MCTSNodeBase> node) {
 	int ascended = 0;
+	auto myReward = agentRewards[getID()];
+	auto myID = getID();
 
 	while (node) {
-		node->addReward(delta, getID());
+		node->addReward(myReward, myID);
 		node = node->parent.lock();
 		++ascended;
 	}
@@ -862,22 +871,21 @@ private:
 
 	sp<MCTSNodeBase> treePolicy() override;
 	int expandAndGetIdx(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
-	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+	void backup(sp<MCTSNodeBase> node) override;
 
 	void postWork() override;
-	void MASTPolicy(reward_t delta);
-	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
+	void MASTPolicy();
+	inline void updateActionStat(AgentID id, int actionIdx);
 
 private:
 	double epsilon;
 	double decayFactor;
-	int timesTreeDescended;
-	int maxAgentCount;
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;
 	std::vector<std::pair<AgentID, int>> actionHistory;
+	int timesTreeDescended;
 	int defaultPolicyLength;
 };
 
@@ -895,7 +903,6 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args),
 	epsilon(getOrDefault(args, "epsilon", 0.8)),
 	decayFactor(getOrDefault(args, "decayFactor", 0.6)),
-	maxAgentCount(initialState->getAgentCount()),
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
@@ -969,7 +976,7 @@ int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreFactor) {
 	}) - children.begin();
 }
 
-reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
+void MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
 	defaultPolicyLength = 0;
 
@@ -980,12 +987,14 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 		++defaultPolicyLength;
 	}
 
-	return state->getReward(getID());
+	for (int i = 0; i < maxAgentCount; ++i)
+		agentRewards[i] = state->getReward(AgentID(i));
+
+	// return state->getReward(getID());
 }
 
 sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state) {
 	auto actions = state->getValidActions();
-	// std::shuffle()
 	assert(!actions.empty());
 
 	if (Random::rand(1.0) <= epsilon)
@@ -999,37 +1008,37 @@ sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state)
 	});
 }
 
-void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node, reward_t delta) {
+void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node) {
 	int timesTreeAscended = 0;
+	auto myID = getID();
+	auto myReward = agentRewards[myID];
 
 	while (node) {
-		node->addReward(delta, getID());
+		node->addReward(myReward, getID());
 		node = node->parent.lock();
 		++timesTreeAscended;
 	}
 
 	assert(timesTreeDescended + 1 == timesTreeAscended);
-	MASTPolicy(delta);
+	MASTPolicy();
 }
 
-void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
+void MCTSAgentWithMAST::MASTPolicy() {
 	assert(defaultPolicyLength + timesTreeDescended == int(actionHistory.size()));
-	assert((delta == 1 && actionHistory.back().first == getID()) || 
-		  (delta == 0 && actionHistory.back().first != getID()) ||
-		   delta == 0.5);
 
 	for (const auto& [agentID, actionIdx] : actionHistory)
-		updateActionStat(agentID, actionIdx, delta);
+		updateActionStat(agentID, actionIdx);
 
 	actionHistory.clear();
 }
 
-void MCTSAgentWithMAST::updateActionStat(AgentID id, int actionIdx, reward_t delta) {
+void MCTSAgentWithMAST::updateActionStat(AgentID id, int actionIdx) {
 	assert(id < int(actionsStats.size()));
 	assert(actionIdx < int(actionsStats[id].size()));
 
 	auto& statToUpdate = actionsStats[id][actionIdx];
-	statToUpdate.score += delta;
+	// we assume there are 2 agents, with rewards [0, 1]
+	statToUpdate.score += agentRewards[id];
 	++statToUpdate.times;
 }
 
@@ -1316,12 +1325,12 @@ public:
 	bool isValid(const sp<Action>& act) const override;
 
 	up<State> clone() override;
-	bool didWin(AgentID id) const override; 
-	reward_t getReward(AgentID id) const override;
+	bool didWin(AgentID id) override; 
+	reward_t getReward(AgentID id) override;
 	AgentID getTurn() const override;
 
 	std::ostream& print(std::ostream& out) const override;
-	std::string getWinnerName() const override;
+	std::string getWinnerName() override;
 
 	bool isLegal(const sp<UltimateTicTacToeAction>& action) const;
 	
@@ -1329,10 +1338,6 @@ public:
 	static_assert(BOARD_SIZE > 0, "Board size has to be positive");
 
 private:
-	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
-	AgentID turn = AGENT1;
-	int lastRow = -1, lastCol = -1;
-
 	bool isAllTerminal() const;
 	bool isRowDone(int row) const;
 	bool isColDone(int col) const;
@@ -1343,10 +1348,19 @@ private:
 	bool canMove(AgentID agentID) const;
 	bool properBoard(int boardRow, int boardCol) const;
 
-	AgentID getWinner() const;
+	AgentID getWinner();
+	AgentID setAndReturnWinner(AgentID winner);
 
 	void printLineSep(std::ostream& out) const;
 	void printRow(std::ostream& out, int i) const;
+
+private:
+	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
+	AgentID turn = AGENT1;
+	int lastRow = -1, lastCol = -1;
+
+	bool isWinnerSet = false;
+	AgentID winner;
 };
 
 
@@ -1512,11 +1526,11 @@ bool UltimateTicTacToe::isValid(const sp<Action>& act) const {
 	return isLegal(action);
 }
 
-bool UltimateTicTacToe::didWin(AgentID id) const {
+bool UltimateTicTacToe::didWin(AgentID id) {
 	return id == getWinner();
 }
 
-reward_t UltimateTicTacToe::getReward(AgentID id) const {
+reward_t UltimateTicTacToe::getReward(AgentID id) {
 	auto winner = getWinner();
 	if (winner == NONE)
 		return 0.5;
@@ -1527,21 +1541,30 @@ up<State> UltimateTicTacToe::clone() {
 	return up<State>(new UltimateTicTacToe(*this));
 }
 
-AgentID UltimateTicTacToe::getWinner() const {
+AgentID UltimateTicTacToe::getWinner() {
 	PROFILE_FUNCTION();
+	
+	if (isWinnerSet)
+		return winner;
 
 	for (int i = 0; i < BOARD_SIZE; ++i) {
 		if (isRowDone(i))
-			return board[i][0].getWinner();
+			return setAndReturnWinner(board[i][0].getWinner());
 		if (isColDone(i))
-			return board[0][i].getWinner();
+			return setAndReturnWinner(board[0][i].getWinner());
 	}
 	if (isDiag1Done())
-		return board[0][0].getWinner();
+		return setAndReturnWinner(board[0][0].getWinner());
 	if (isDiag2Done())
-		return board[0][BOARD_SIZE - 1].getWinner();
+		return setAndReturnWinner(board[0][BOARD_SIZE - 1].getWinner());
 	assert(isAllTerminal());
-	return NONE; 
+	return setAndReturnWinner(NONE);
+}
+
+AgentID UltimateTicTacToe::setAndReturnWinner(AgentID winner) {
+	assert(!isWinnerSet);
+	isWinnerSet = true;
+	return this->winner = winner;
 }
 
 std::ostream& UltimateTicTacToe::print(std::ostream& out) const {
@@ -1576,7 +1599,7 @@ void UltimateTicTacToe::printLineSep(std::ostream& out) const {
 	out << "+\n";
 }
 
-std::string UltimateTicTacToe::getWinnerName() const {
+std::string UltimateTicTacToe::getWinnerName() {
 	PROFILE_FUNCTION();
 
 	assert(isTerminal());
@@ -1908,7 +1931,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgent, FlatMCTSAgent>(
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, MCTSAgent>(
 		turnLimitInMs, {
 			{ "exploreFactor", 0.4 },
 			{ "epsilon", 0.8 },

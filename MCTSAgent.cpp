@@ -36,7 +36,7 @@ MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState)
 
 }
 
-reward_t MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
+void MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
 
      while (!state->isTerminal()) {
@@ -45,14 +45,19 @@ reward_t MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 		state->apply(action);
 	}
 
-	return state->getReward(getID());
+	for (int i = 0; i < maxAgentCount; ++i)
+		agentRewards[i] = state->getReward(AgentID(i));
+	
+	// return state->getReward(getID());
 }
 
-void MCTSAgent::backup(sp<MCTSNodeBase> node, reward_t delta) {
+void MCTSAgent::backup(sp<MCTSNodeBase> node) {
 	int ascended = 0;
+	auto myReward = agentRewards[getID()];
+	auto myID = getID();
 
 	while (node) {
-		node->addReward(delta, getID());
+		node->addReward(myReward, myID);
 		node = node->parent.lock();
 		++ascended;
 	}

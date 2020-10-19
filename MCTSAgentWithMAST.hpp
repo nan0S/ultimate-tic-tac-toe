@@ -33,22 +33,21 @@ private:
 
 	sp<MCTSNodeBase> treePolicy() override;
 	int expandAndGetIdx(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
-	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+	void backup(sp<MCTSNodeBase> node) override;
 
 	void postWork() override;
-	void MASTPolicy(reward_t delta);
-	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
+	void MASTPolicy();
+	inline void updateActionStat(AgentID id, int actionIdx);
 
 private:
 	double epsilon;
 	double decayFactor;
-	int timesTreeDescended;
-	int maxAgentCount;
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;
 	std::vector<std::pair<AgentID, int>> actionHistory;
+	int timesTreeDescended;
 	int defaultPolicyLength;
 };
 

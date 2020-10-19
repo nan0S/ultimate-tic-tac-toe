@@ -14,7 +14,6 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args),
 	epsilon(getOrDefault(args, "epsilon", 0.8)),
 	decayFactor(getOrDefault(args, "decayFactor", 0.6)),
-	maxAgentCount(initialState->getAgentCount()),
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
 
@@ -88,7 +87,7 @@ int MCTSAgentWithMAST::MCTSNode::selectAndGetIdx(param_t exploreFactor) {
 	}) - children.begin();
 }
 
-reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
+void MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 	auto state = initialNode->cloneState();
 	defaultPolicyLength = 0;
 
@@ -99,12 +98,14 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 		++defaultPolicyLength;
 	}
 
-	return state->getReward(getID());
+	for (int i = 0; i < maxAgentCount; ++i)
+		agentRewards[i] = state->getReward(AgentID(i));
+
+	// return state->getReward(getID());
 }
 
 sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state) {
 	auto actions = state->getValidActions();
-	// std::shuffle()
 	assert(!actions.empty());
 
 	if (Random::rand(1.0) <= epsilon)
@@ -118,38 +119,37 @@ sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state)
 	});
 }
 
-void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node, reward_t delta) {
+void MCTSAgentWithMAST::backup(sp<MCTSNodeBase> node) {
 	int timesTreeAscended = 0;
+	auto myID = getID();
+	auto myReward = agentRewards[myID];
 
 	while (node) {
-		node->addReward(delta, getID());
+		node->addReward(myReward, getID());
 		node = node->parent.lock();
 		++timesTreeAscended;
 	}
 
 	assert(timesTreeDescended + 1 == timesTreeAscended);
-	MASTPolicy(delta);
+	MASTPolicy();
 }
 
-void MCTSAgentWithMAST::MASTPolicy(reward_t delta) {
+void MCTSAgentWithMAST::MASTPolicy() {
 	assert(defaultPolicyLength + timesTreeDescended == int(actionHistory.size()));
-	// temporary
-	assert((delta == 1 && actionHistory.back().first == getID()) || 
-		  (delta == 0 && actionHistory.back().first != getID()) ||
-		   delta == 0.5);
 
 	for (const auto& [agentID, actionIdx] : actionHistory)
-		updateActionStat(agentID, actionIdx, delta);
+		updateActionStat(agentID, actionIdx);
 
 	actionHistory.clear();
 }
 
-void MCTSAgentWithMAST::updateActionStat(AgentID id, int actionIdx, reward_t delta) {
+void MCTSAgentWithMAST::updateActionStat(AgentID id, int actionIdx) {
 	assert(id < int(actionsStats.size()));
 	assert(actionIdx < int(actionsStats[id].size()));
 
 	auto& statToUpdate = actionsStats[id][actionIdx];
-	statToUpdate.score += delta;
+	// we assume there are 2 agents, with rewards [0, 1]
+	statToUpdate.score += agentRewards[id];
 	++statToUpdate.times;
 }
 

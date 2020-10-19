@@ -11,6 +11,8 @@ MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root,
 	Agent(id),
 	root(std::move(root)),
 	timer(calcLimitInMs),
+	maxAgentCount(this->root->state->getAgentCount()),
+	agentRewards(maxAgentCount),
 	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)) {
 
 }
@@ -30,8 +32,8 @@ sp<Action> MCTSAgentBase::getAction(const up<State>&) {
 
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
-		reward_t delta = defaultPolicy(selectedNode);
-		backup(selectedNode, delta);
+		defaultPolicy(selectedNode);
+		backup(selectedNode);
 		++simulationCount;
 	}
 
@@ -83,9 +85,9 @@ up<State> MCTSAgentBase::MCTSNode::cloneState() {
 	return state->clone();
 }
 
-void MCTSAgentBase::MCTSNode::addReward(reward_t delta, AgentID whoIsPlaying) {
-	stats.score += whoIsPlaying != state->getTurn() ? delta : 1 - delta;
-	++stats.visits;
+void MCTSAgentBase::MCTSNode::addReward(reward_t agentPlayingReward, AgentID whoIsPlaying) {
+  stats.score += whoIsPlaying != state->getTurn() ? agentPlayingReward : 1 - agentPlayingReward;
+  ++stats.visits;
 }
 
 sp<Action> MCTSAgentBase::MCTSNode::getBestAction() {

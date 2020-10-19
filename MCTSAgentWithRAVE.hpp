@@ -12,7 +12,7 @@ public:
 	using AgentArgs = Agent::AgentArgs;
 
 	MCTSAgentWithRAVE(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, const AgentArgs& args);
+		double calcLimitInMs, const AgentArgs& args);
  
 	std::vector<KeyValue> getDesc() const override;
 
@@ -33,23 +33,22 @@ private:
 		std::vector<ActionStats> actionStats;
 	};
 
-
 	sp<MCTSNodeBase> treePolicy() override;
 	int expandAndGetIdx(const sp<MCTSNode>& node);
-	reward_t defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
-	void backup(sp<MCTSNodeBase> node, reward_t delta) override;
+	void backup(sp<MCTSNodeBase> node) override;
 
 	void postWork() override;
-	void RAVEPolicy(reward_t delta);
-	inline void updateActionStat(AgentID id, int actionIdx, reward_t delta);
+	void RAVEPolicy();
+	inline void updateActionStat(AgentID id, int actionIdx);
 
 private:
 	double KFactor;
 	int maxActionCount;
-	int timesTreeDescended;
 	std::vector<int> treeActionHistory;
 	std::vector<int> simActionHistory;
+	int timesTreeDescended;
 	int defaultPolicyLength;
 };
 

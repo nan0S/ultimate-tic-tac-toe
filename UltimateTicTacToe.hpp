@@ -32,12 +32,12 @@ public:
 	bool isValid(const sp<Action>& act) const override;
 
 	up<State> clone() override;
-	bool didWin(AgentID id) const override; 
-	reward_t getReward(AgentID id) const override;
+	bool didWin(AgentID id) override; 
+	reward_t getReward(AgentID id) override;
 	AgentID getTurn() const override;
 
 	std::ostream& print(std::ostream& out) const override;
-	std::string getWinnerName() const override;
+	std::string getWinnerName() override;
 
 	bool isLegal(const sp<UltimateTicTacToeAction>& action) const;
 	
@@ -45,10 +45,6 @@ public:
 	static_assert(BOARD_SIZE > 0, "Board size has to be positive");
 
 private:
-	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
-	AgentID turn = AGENT1;
-	int lastRow = -1, lastCol = -1;
-
 	bool isAllTerminal() const;
 	bool isRowDone(int row) const;
 	bool isColDone(int col) const;
@@ -59,10 +55,19 @@ private:
 	bool canMove(AgentID agentID) const;
 	bool properBoard(int boardRow, int boardCol) const;
 
-	AgentID getWinner() const;
+	AgentID getWinner();
+	AgentID setAndReturnWinner(AgentID winner);
 
 	void printLineSep(std::ostream& out) const;
 	void printRow(std::ostream& out, int i) const;
+
+private:
+	TicTacToe board[BOARD_SIZE][BOARD_SIZE];
+	AgentID turn = AGENT1;
+	int lastRow = -1, lastCol = -1;
+
+	bool isWinnerSet = false;
+	AgentID winner;
 };
 
 #endif /* ULTIMATE_TICTACTOE_HPP */
