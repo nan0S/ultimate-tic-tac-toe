@@ -7,10 +7,16 @@ using reward_t = MCTSAgent::reward_t;
 using MCTSNodeBase = MCTSAgent::MCTSNodeBase;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		double calcLimitInMs, param_t exploreFactor) :
-	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor) {
+		double calcLimitInMs, const AgentArgs& args) :
+	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args) {
 
 }
+
+// MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
+		// double calcLimitInMs, param_t exploreFactor) :
+	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor) {
+
+// }
 
 MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {

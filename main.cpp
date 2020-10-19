@@ -1,8 +1,15 @@
 #include "Common.hpp"
 #include "GameRunner.hpp"
 #include "CGRunner.hpp"
+#include "UltimateTicTacToe.hpp"
+#include "RandomAgent.hpp"
+#include "FlatMCTSAgent.hpp"
+#include "MCTSAgent.hpp"
+#include "MCTSAgentWithMAST.hpp"
 
 #include <getopt.h>
+#include <fstream>
+#include <algorithm>
 
 bool verboseFlag = false;
 int numberOfGames = 1;
@@ -42,16 +49,28 @@ void parseArgs(int argc, char* argv[]) {
 		turnLimitInMs = std::stold(argv[optind++]);
 }
 
-
 int main(int argc, char* argv[]) {
 
 	std::ios_base::sync_with_stdio(false);
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	GameRunner(turnLimitInMs).playGames(numberOfGames, verboseFlag);
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, FlatMCTSAgent>(
+		turnLimitInMs, {
+			{ "exploreFactor", 0.4 },
+			{ "epsilon", 0.8 },
+			{ "decayFactor", 0.6 }
+		},
+		{ { "exploreFactor", 0.4 } }
+	);
+	gameRunner.playGames(numberOfGames);
 #else
-	CGRunner(turnLimitInMs).playGame();
+	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgent>(
+		turnLimitInMs, {
+			{ "exploreFactor", 0.4 }
+		}
+	);
+	cgRunner.playGame();
 #endif
 
 	return 0;

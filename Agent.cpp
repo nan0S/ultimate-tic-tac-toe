@@ -16,6 +16,8 @@ namespace std {
 	}
 }
 
+using param_t = Agent::param_t;
+
 Agent::Agent(AgentID id) : id(id) {
 
 }
@@ -30,4 +32,9 @@ std::vector<KeyValue> Agent::getDesc() const {
 
 void Agent::recordAction(const sp<Action>&) {
 
+}
+
+param_t Agent::getOrDefault(const AgentArgs& args, const std::string& key,
+	param_t defaultVal) const {
+	return args.count(key) ? args.at(key) : defaultVal;
 }

@@ -8,11 +8,12 @@ using param_t = MCTSAgentWithMAST::param_t;
 using reward_t = MCTSAgentWithMAST::reward_t;
 using MCTSNodeBase = MCTSAgentWithMAST::MCTSNodeBase;
 
+
 MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
-		double calcLimitInMs, param_t exploreFactor, param_t epsilon, param_t decayFactor) :
-	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor),
-	epsilon(epsilon),
-	decayFactor(decayFactor),
+		double calcLimitInMs, const AgentArgs& args) :
+	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args),
+	epsilon(getOrDefault(args, "epsilon", 0.8)),
+	decayFactor(getOrDefault(args, "decayFactor", 0.6)),
 	maxAgentCount(initialState->getAgentCount()),
 	maxActionCount(initialState->getActionCount()),
 	actionsStats(maxAgentCount) {
@@ -20,6 +21,18 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	std::fill(actionsStats.begin(), actionsStats.end(),
 			std::vector<MASTActionStats>(maxActionCount));
 }
+// MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
+		// double calcLimitInMs, param_t exploreFactor, param_t epsilon, param_t decayFactor) :
+	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor),
+	// epsilon(epsilon),
+	// decayFactor(decayFactor),
+	// maxAgentCount(initialState->getAgentCount()),
+	// maxActionCount(initialState->getActionCount()),
+	// actionsStats(maxAgentCount) {
+
+	// std::fill(actionsStats.begin(), actionsStats.end(),
+			// std::vector<MASTActionStats>(maxActionCount));
+// }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {
@@ -103,6 +116,7 @@ reward_t MCTSAgentWithMAST::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 
 sp<Action> MCTSAgentWithMAST::getActionWithDefaultPolicy(const up<State>& state) {
 	auto actions = state->getValidActions();
+	// std::shuffle()
 	assert(!actions.empty());
 
 	if (Random::rand(1.0) <= epsilon)

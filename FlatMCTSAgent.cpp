@@ -8,7 +8,7 @@
 using ActionStats = FlatMCTSAgent::ActionStats;
 using reward_t = FlatMCTSAgent::reward_t;
 
-FlatMCTSAgent::FlatMCTSAgent(AgentID id, double limitInMs) : 
+FlatMCTSAgent::FlatMCTSAgent(AgentID id, const up<State>&, double limitInMs, const AgentArgs&) : 
 	Agent(id),
 	timer(limitInMs) {
 

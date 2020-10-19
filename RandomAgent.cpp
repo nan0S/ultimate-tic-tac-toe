@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-RandomAgent::RandomAgent(AgentID id) : Agent(id) {
+RandomAgent::RandomAgent(AgentID id, const up<State>&, double, const AgentArgs&) : Agent(id) {
 
 }
 

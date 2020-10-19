@@ -8,14 +8,12 @@ OBJS = main.o \
 	RandomAgent.o \
 	TicTacToe.o \
 	UltimateTicTacToe.o \
-	GameRunner.o \
 	StatSystem.o \
 	FlatMCTSAgent.o \
 	TicTacToeRealAgent.o \
 	MCTSAgentBase.o \
 	MCTSAgent.o \
 	CGAgent.o \
-	CGRunner.o \
 	MCTSAgentWithMAST.o
 
 CC = g++

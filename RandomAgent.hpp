@@ -6,7 +6,7 @@
 
 class RandomAgent : public Agent {
 public:
-	RandomAgent(AgentID id);
+	RandomAgent(AgentID id, const up<State>&, double, const AgentArgs&);
 	sp<Action> getAction(const up<State>& state) override;
 	std::vector<KeyValue> getDesc() const override;
 };

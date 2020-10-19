@@ -10,7 +10,7 @@ class UltimateTicTacToe : public State {
 public:
 	using reward_t = State::reward_t;
 
-	struct UltimateTicTacToeAction : public Action {
+	typedef struct UltimateTicTacToeAction : public Action {
 		UltimateTicTacToeAction(const AgentID& agentID, int row, int col,
 				const TicTacToe::TicTacToeAction& action);
 
@@ -20,7 +20,7 @@ public:
 		AgentID agentID;
 		int row, col;
 		TicTacToe::TicTacToeAction action;
-	};
+	} action_t;
 
 	bool isTerminal() const override;
 	void apply(const sp<Action>& act) override;

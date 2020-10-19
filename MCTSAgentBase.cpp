@@ -7,13 +7,21 @@ using param_t = MCTSAgentBase::param_t;
 using reward_t = MCTSAgentBase::reward_t;
 
 MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root, 
-		double calcLimitInMs, param_t exploreFactor) :
+		double calcLimitInMs, const AgentArgs& args) :
 	Agent(id),
 	root(std::move(root)),
 	timer(calcLimitInMs),
-	exploreFactor(exploreFactor) {
+	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)) {
 
 }
+// MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root, 
+		// double calcLimitInMs, param_t exploreFactor) :
+	// Agent(id),
+	// root(std::move(root)),
+	// timer(calcLimitInMs),
+	// exploreFactor(exploreFactor) {
+
+// }
 
 MCTSAgentBase::MCTSNode::MCTSNode(const up<State>& initialState)
 	: state(initialState->clone()), actions(state->getValidActions()) {

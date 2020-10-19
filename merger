@@ -28,11 +28,9 @@ DEPS=(
 	TicTacToeRealAgent.hpp
 	TicTacToeRealAgent.cpp
 	GameRunner.hpp
-	GameRunner.cpp
 	CGAgent.hpp
 	CGAgent.cpp
 	CGRunner.hpp
-	CGRunner.cpp
 	main.cpp
 )
 
