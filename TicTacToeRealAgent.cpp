@@ -8,7 +8,7 @@
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
 using TicTacToeAction = TicTacToe::TicTacToeAction; 
 
-TicTacToeRealAgent::TicTacToeRealAgent(AgentID id) : Agent(id) {
+TicTacToeRealAgent::TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&) : Agent(id) {
 
 }
 

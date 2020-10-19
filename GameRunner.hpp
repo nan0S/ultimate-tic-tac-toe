@@ -31,11 +31,8 @@ public:
 
 		up<State> game = std::mku<game_t>();
 		sp<Agent> agents[] {
-			// std::mksh<MCTSAgentWithMAST>(AGENT1, game, turnLimitInMs, 0.4, 0.8, 0.5),
 			std::mksh<agent1_t>(AGENT1, game, turnLimitInMs, agent1Args),
 			std::mksh<agent2_t>(AGENT2, game, turnLimitInMs, agent2Args)
-			// std::mksh<MCTSAgent>(AGENT2, game, turnLimitInMs, 0.4),
-			// std::mksh<FlatMCTSAgent>(AGENT2, 100),
 		};
 
 		if (verbose)

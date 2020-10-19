@@ -12,12 +12,6 @@ MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState,
 
 }
 
-// MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		// double calcLimitInMs, param_t exploreFactor) :
-	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor) {
-
-// }
-
 MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {
 

@@ -42,8 +42,6 @@ protected:
 public:
   	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
 		double calcLimitInMs, const AgentArgs& args);
-       // MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
-		// double calcLimitInMs, param_t exploreFactor=1.0);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;

@@ -12,8 +12,6 @@ public:
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, const AgentArgs& args);
-       // MCTSAgent(AgentID id, const up<State> &initialState,
-			// double calcLimitInMs, param_t exploreSpeed=1.0);
 
 	std::vector<KeyValue> getDesc() const override;
 

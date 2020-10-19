@@ -570,8 +570,6 @@ protected:
 public:
   	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
 		double calcLimitInMs, const AgentArgs& args);
-       // MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
-		// double calcLimitInMs, param_t exploreFactor=1.0);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
@@ -608,14 +606,6 @@ MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root,
 	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)) {
 
 }
-// MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root, 
-		// double calcLimitInMs, param_t exploreFactor) :
-	// Agent(id),
-	// root(std::move(root)),
-	// timer(calcLimitInMs),
-	// exploreFactor(exploreFactor) {
-
-// }
 
 MCTSAgentBase::MCTSNode::MCTSNode(const up<State>& initialState)
 	: state(initialState->clone()), actions(state->getValidActions()) {
@@ -736,8 +726,6 @@ public:
 
   	MCTSAgent(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, const AgentArgs& args);
-       // MCTSAgent(AgentID id, const up<State> &initialState,
-			// double calcLimitInMs, param_t exploreSpeed=1.0);
 
 	std::vector<KeyValue> getDesc() const override;
 
@@ -765,12 +753,6 @@ MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState,
 	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args) {
 
 }
-
-// MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
-		// double calcLimitInMs, param_t exploreFactor) :
-	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor) {
-
-// }
 
 MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {
@@ -844,10 +826,7 @@ public:
 
 	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, const AgentArgs& args);
-	// MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
-			// double calcLimitInMs, param_t exploreFactor=1.0,
-			// param_t epsilon=0.8, param_t decayFactor=0.2);
-
+ 
 	std::vector<KeyValue> getDesc() const override;
 
 private:
@@ -907,18 +886,6 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	std::fill(actionsStats.begin(), actionsStats.end(),
 			std::vector<MASTActionStats>(maxActionCount));
 }
-// MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
-		// double calcLimitInMs, param_t exploreFactor, param_t epsilon, param_t decayFactor) :
-	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor),
-	// epsilon(epsilon),
-	// decayFactor(decayFactor),
-	// maxAgentCount(initialState->getAgentCount()),
-	// maxActionCount(initialState->getActionCount()),
-	// actionsStats(maxAgentCount) {
-
-	// std::fill(actionsStats.begin(), actionsStats.end(),
-			// std::vector<MASTActionStats>(maxActionCount));
-// }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {
@@ -1634,7 +1601,7 @@ AgentID UltimateTicTacToe::getTurn() const {
 
 class TicTacToeRealAgent : public Agent {
 public:
-	TicTacToeRealAgent(AgentID id);
+	TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&);
 	sp<Action> getAction(const up<State>& state) override;
 	std::vector<KeyValue> getDesc() const override;
 	
@@ -1650,7 +1617,7 @@ private:
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
 using TicTacToeAction = TicTacToe::TicTacToeAction; 
 
-TicTacToeRealAgent::TicTacToeRealAgent(AgentID id) : Agent(id) {
+TicTacToeRealAgent::TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&) : Agent(id) {
 
 }
 
@@ -1719,11 +1686,8 @@ public:
 
 		up<State> game = std::mku<game_t>();
 		sp<Agent> agents[] {
-			// std::mksh<MCTSAgentWithMAST>(AGENT1, game, turnLimitInMs, 0.4, 0.8, 0.5),
 			std::mksh<agent1_t>(AGENT1, game, turnLimitInMs, agent1Args),
 			std::mksh<agent2_t>(AGENT2, game, turnLimitInMs, agent2Args)
-			// std::mksh<MCTSAgent>(AGENT2, game, turnLimitInMs, 0.4),
-			// std::mksh<FlatMCTSAgent>(AGENT2, 100),
 		};
 
 		if (verbose)

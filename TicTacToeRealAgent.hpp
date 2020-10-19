@@ -6,7 +6,7 @@
 
 class TicTacToeRealAgent : public Agent {
 public:
-	TicTacToeRealAgent(AgentID id);
+	TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&);
 	sp<Action> getAction(const up<State>& state) override;
 	std::vector<KeyValue> getDesc() const override;
 	

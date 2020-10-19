@@ -21,18 +21,6 @@ MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState,
 	std::fill(actionsStats.begin(), actionsStats.end(),
 			std::vector<MASTActionStats>(maxActionCount));
 }
-// MCTSAgentWithMAST::MCTSAgentWithMAST(AgentID id, const up<State>& initialState, 
-		// double calcLimitInMs, param_t exploreFactor, param_t epsilon, param_t decayFactor) :
-	// MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, exploreFactor),
-	// epsilon(epsilon),
-	// decayFactor(decayFactor),
-	// maxAgentCount(initialState->getAgentCount()),
-	// maxActionCount(initialState->getActionCount()),
-	// actionsStats(maxAgentCount) {
-
-	// std::fill(actionsStats.begin(), actionsStats.end(),
-			// std::vector<MASTActionStats>(maxActionCount));
-// }
 
 MCTSAgentWithMAST::MCTSNode::MCTSNode(const up<State>& initialState) :
 	MCTSNodeBase(initialState) {

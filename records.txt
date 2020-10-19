@@ -1,8 +1,0 @@
-60% { exploreFactor1: 1, epsilon: 1, decayFactor: 1 }
-40% { exploreFactor1: 1, epsilon: 1, decayFactor: 0 }
-20% { exploreFactor1: 0, epsilon: 0, decayFactor: 0 }
-20% { exploreFactor1: 0, epsilon: 0, decayFactor: 1 }
-20% { exploreFactor1: 1, epsilon: 0, decayFactor: 1 }
-0% { exploreFactor1: 0, epsilon: 1, decayFactor: 0 }
-0% { exploreFactor1: 0, epsilon: 1, decayFactor: 1 }
-0% { exploreFactor1: 1, epsilon: 0, decayFactor: 0 }

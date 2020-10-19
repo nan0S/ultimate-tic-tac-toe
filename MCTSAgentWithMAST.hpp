@@ -13,10 +13,7 @@ public:
 
 	MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
 			double calcLimitInMs, const AgentArgs& args);
-	// MCTSAgentWithMAST(AgentID id, const up<State> &initialState,
-			// double calcLimitInMs, param_t exploreFactor=1.0,
-			// param_t epsilon=0.8, param_t decayFactor=0.2);
-
+ 
 	std::vector<KeyValue> getDesc() const override;
 
 private:
