@@ -10,10 +10,10 @@ public:
 	using reward_t = MCTSAgentBase::reward_t;
 	using MCTSNodeBase = MCTSAgentBase::MCTSNode;
 
-	MCTSAgentWithMASTAndRAVE(AgentID id, const up<State> &initialState,
-			double calcLimitInMs, const AgentArgs& args);
+	MCTSAgentWithMASTAndRAVE(AgentID id, double calcLimitInMs,
+		const up<State> &initialState, const AgentArgs& args);
  
-	std::vector<KeyValue> getDesc() const override;
+	std::vector<KeyValue> getDesc(double avgSimulationCount=0) const override;
 
 protected:
 	struct MCTSNode : public MCTSNodeBase {

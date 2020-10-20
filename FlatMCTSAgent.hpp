@@ -12,10 +12,10 @@ class FlatMCTSAgent : public Agent {
 public:
 	using reward_t = State::reward_t;
 
-	FlatMCTSAgent(AgentID id, const up<State>&, double limitInMs, const AgentArgs&);
+	FlatMCTSAgent(AgentID id, double calcLimitInMs, const up<State>&, const AgentArgs&);
 
 	sp<Action> getAction(const up<State>& state) override;
-	std::vector<KeyValue> getDesc() const override;
+	std::vector<KeyValue> getDesc(double avgSimulationCount=0) const override;
 	
 	struct ActionStats {
 		reward_t reward = 0;
@@ -24,9 +24,7 @@ public:
 	};
 
 private:
-	CalcTimer timer;
 	std::vector<ActionStats> stats;
-	int simulationCount = 0;
 };
 
 #endif /* MCTS_AGENT_HPP */

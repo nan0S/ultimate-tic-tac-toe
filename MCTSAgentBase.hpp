@@ -37,12 +37,10 @@ protected:
 	};
 
 public:
-	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
-		double calcLimitInMs);
+	MCTSAgentBase(AgentID id, double calcLimitInMs, up<MCTSNode>&& root);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
-	void changeCalcLimit(double newLimitInMs);
 	double getAvgSimulationCount() const override;
 
 protected:
@@ -58,7 +56,6 @@ protected:
 
 protected:
 	sp<MCTSNode> root;
-	CalcTimer timer;
 	int maxAgentCount;
 	std::vector<reward_t> agentRewards;
 

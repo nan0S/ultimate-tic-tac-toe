@@ -8,9 +8,8 @@
 using ActionStats = FlatMCTSAgent::ActionStats;
 using reward_t = FlatMCTSAgent::reward_t;
 
-FlatMCTSAgent::FlatMCTSAgent(AgentID id, const up<State>&, double limitInMs, const AgentArgs&) : 
-	Agent(id),
-	timer(limitInMs) {
+FlatMCTSAgent::FlatMCTSAgent(AgentID id, double calcLimitInMs, const up<State>&, const AgentArgs&) : 
+	Agent(id, calcLimitInMs) {
 
 }
 
@@ -24,7 +23,7 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 	stats.resize(actionsNum);
 	std::fill(stats.begin(), stats.end(), ActionStats());
 	
-	for (int i = 0; i < 100; ++i) {
+	while (timer.isTimeLeft()) {
 		int randActionIdx = Random::rand(actionsNum);
 		auto nState = state->applyCopy(validActions[randActionIdx]);
 
@@ -35,10 +34,7 @@ sp<Action> FlatMCTSAgent::getAction(const up<State>& state) {
 		}
 
 		++stats[randActionIdx].total;
-		// stats[randActionIdx].reward += nState->getReward(getID());
-		if (nState->didWin(getID()))
-			++stats[randActionIdx].reward;
-		
+		stats[randActionIdx].reward += nState->getReward(getID());
 		++simulationCount;
 	}
 
@@ -53,14 +49,13 @@ bool ActionStats::operator<(const ActionStats& o) const {
 	return reward * o.total < o.reward * total;
 }
 
-std::vector<KeyValue> FlatMCTSAgent::getDesc() const {
-	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+std::vector<KeyValue> FlatMCTSAgent::getDesc(double avgSimulationCount) const {
 	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "Flat MCTS agent.", "" },
 		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average number of simulations per turn", std::to_string(avgSimulationCount) + " sim/turn" },
 		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
 	};
 }

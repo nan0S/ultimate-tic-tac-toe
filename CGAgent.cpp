@@ -3,7 +3,7 @@
 #include "UltimateTicTacToe.hpp"
 #include <iostream>
 
-CGAgent::CGAgent(AgentID id) : Agent(id) {
+CGAgent::CGAgent(AgentID id) : Agent(id, 0) {
 
 }
 

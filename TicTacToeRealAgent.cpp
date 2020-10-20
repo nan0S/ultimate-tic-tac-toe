@@ -8,7 +8,8 @@
 using UltimateTicTacToeAction = UltimateTicTacToe::UltimateTicTacToeAction;
 using TicTacToeAction = TicTacToe::TicTacToeAction; 
 
-TicTacToeRealAgent::TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&) : Agent(id) {
+TicTacToeRealAgent::TicTacToeRealAgent(AgentID id, double calcLimitInMs,
+	const up<State>&, const AgentArgs&) : Agent(id, calcLimitInMs) {
 
 }
 
@@ -46,6 +47,6 @@ bool TicTacToeRealAgent::isInRange(int idx) const {
 	return 1 <= idx && idx <= UltimateTicTacToe::BOARD_SIZE;
 }
 
-std::vector<KeyValue> TicTacToeRealAgent::getDesc() const {
+std::vector<KeyValue> TicTacToeRealAgent::getDesc(double) const {
 	return { { "Real world, interactive player.", "" } };
 }

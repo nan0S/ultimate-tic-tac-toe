@@ -6,11 +6,9 @@
 using param_t = MCTSAgentBase::param_t;
 using reward_t = MCTSAgentBase::reward_t;
 
-MCTSAgentBase::MCTSAgentBase(AgentID id, up<MCTSAgentBase::MCTSNode>&& root, 
-		double calcLimitInMs) :
-	Agent(id),
+MCTSAgentBase::MCTSAgentBase(AgentID id, double calcLimitInMs, up<MCTSAgentBase::MCTSNode>&& root) :
+	Agent(id, calcLimitInMs),
 	root(std::move(root)),
-	timer(calcLimitInMs),
 	maxAgentCount(this->root->state->getAgentCount()),
 	agentRewards(maxAgentCount) {
 
@@ -146,10 +144,6 @@ void MCTSAgentBase::recordAction(const sp<Action>& action) {
 	else
 		root = root->makeChildFromState(root->state->applyCopy(action));
 	assert(!root->parent.lock());
-}
-
-void MCTSAgentBase::changeCalcLimit(double newLimitInMs) {
-	timer.changeLimit(newLimitInMs);
 }
 
 void MCTSAgentBase::postWork() {

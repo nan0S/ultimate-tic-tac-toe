@@ -19,6 +19,7 @@ public:
 	}
 
 	void playGames(int numberOfGames, bool verbose=false) {
+		this->numberOfGames = numberOfGames;
 		statSystem.reset();
 		for (int i = 0; i < numberOfGames - 1; ++i)
 			playGame(verbose);
@@ -31,8 +32,8 @@ public:
 
 		up<State> game = std::mku<game_t>();
 		sp<Agent> agents[] {
-			std::mksh<agent1_t>(AGENT1, game, turnLimitInMs, agent1Args),
-			std::mksh<agent2_t>(AGENT2, game, turnLimitInMs, agent2Args)
+			std::mksh<agent1_t>(AGENT1, turnLimitInMs, game, agent1Args),
+			std::mksh<agent2_t>(AGENT2, turnLimitInMs, game, agent2Args)
 		};
 
 		if (verbose)
@@ -58,7 +59,8 @@ public:
 		if (lastGame)
 			for (int i = 0; i < agentCount; ++i) {
 				auto id = agents[i]->getID();
-				statSystem.addDesc(std::to_string(id), agents[i]->getDesc());
+				double avgSimulationCount = agentSimCount[i] / numberOfGames;
+				statSystem.addDesc(std::to_string(id), agents[i]->getDesc(avgSimulationCount));
 			}
 
 		announceGameEnd(game->getWinnerName());
@@ -79,6 +81,7 @@ private:
 	AgentArgs agent1Args;
 	AgentArgs agent2Args;
 	StatSystem statSystem;
+	int numberOfGames;
 	std::vector<int> agentSimCount;
 };
 

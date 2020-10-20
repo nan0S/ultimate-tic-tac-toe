@@ -18,7 +18,7 @@ namespace std {
 
 using param_t = Agent::param_t;
 
-Agent::Agent(AgentID id) : id(id) {
+Agent::Agent(AgentID id, double calcLimitInMs) : id(id), timer(calcLimitInMs) {
 
 }
 
@@ -26,7 +26,7 @@ AgentID Agent::getID() const {
 	return id;
 }
 
-std::vector<KeyValue> Agent::getDesc() const {
+std::vector<KeyValue> Agent::getDesc(double) const {
 	return {};
 }
 
@@ -40,5 +40,11 @@ param_t Agent::getOrDefault(const AgentArgs& args, const std::string& key,
 }
 
 double Agent::getAvgSimulationCount() const {
-	return 0;
+	if (timer.getTotalNumberOfCals() == 0)
+		return 0;
+	return double(simulationCount) / timer.getTotalNumberOfCals();
+}
+
+void Agent::changeCalcLimit(double newCalcLimit) {
+	timer.changeLimit(newCalcLimit);
 }

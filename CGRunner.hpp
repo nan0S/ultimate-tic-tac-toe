@@ -4,6 +4,8 @@
 #include "Agent.hpp"
 #include "CGAgent.hpp"
 
+#include <cassert>
+
 template<class game_t, class agent_t>
 class CGRunner {
 public:
@@ -18,7 +20,7 @@ public:
 		up<State> game = std::mku<game_t>();
 		sp<Agent> agents[] {
 			std::mksh<CGAgent>(AGENT1),
-			std::mksh<agent_t>(AGENT2, game, firstTurnLimitInMs, agentArgs),
+			std::mksh<agent_t>(AGENT2, firstTurnLimitInMs, game, agentArgs),
 		};
 
 		int agentCount = sizeof(agents) / sizeof(agents[0]);
@@ -31,7 +33,7 @@ public:
 
 			if (!action) {
 				game = std::mku<game_t>();
-				agents[0] = std::mksh<agent_t>(AGENT1, game, firstTurnLimitInMs, agentArgs);
+				agents[0] = std::mksh<agent_t>(AGENT1, firstTurnLimitInMs, game, agentArgs);
 				agents[1] = std::mksh<CGAgent>(AGENT2);
 				continue;
 			}

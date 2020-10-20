@@ -2,9 +2,12 @@
 
 \usepackage[a4paper, margin=2cm]{geometry}
 \usepackage{listings}
+\usepackage{slashbox}
+\usepackage{float}
 
 \title{
 	Exercise 1 \\
+	Ultimate Tic-Tac-Toe \\
 	Artificial Intelligence for Games \\
 }
 \author{Hubert Obrzut}
@@ -13,5 +16,86 @@
 
 	\maketitle
 	
+	\section{Base Algorithm}
+	 \begin{itemize}
+	 	\item Implemented algorithms: \textbf{Flat MC} and \textbf{MCTS} with UCT selection policy and random simulation policy as specified in the contents of the exercise.
+	 	\item Programming language used: \textbf{C++}.
+	 	\item Testing: performed both on my own machine - making agents play against each other - and CodingGame platform.
+	 	\item Number of playouts gathered (on my own machine): \textbf{1000}.
+	 	\item Total number of seconds running: \textbf{4534.2s}.
+	 	\item Time limit for one move: \textbf{100ms}.
+	 	\item Exploration constant for UCT policy in MCTS: \textbf{0.4}.
+	 \end{itemize}
+	 \subsection{Algorithm results}
+	 We define simulation as a one iteration of the algorithm - for example one sequence of selection-expansion-simulation-backpropagation is the one simulation in MCTS algorithm. 
+	 \begin{center}
+		 \begin{tabular}{| c | c | c |}
+		 \hline
+		  & FlatMC & MCTS \\ \hline
+		  Winrate against each other & 2.6\% & 89.4\% \\ \hline
+		  Average number of simulations per turn & 586 & 658 \\ \hline
+		  Coding Game Top Players & 53\% & 34\% \\ \hline
+		 \end{tabular}
+	 \end{center}
+	 Testing on Coding Game platform was done as a Gold Ranked player - numbers of players in total, when testing was done - 596. Although we can say that pure MCTS dominates FlatMC on my own machine, in the Coding Game environment the difference is not so huge. \\\\
+	\textit{Note:} Winrates do not add up to 100\% because, of course, we can have a draw.
+	
+	\section{Enhancements}
+	I have decided to implement two enhancements from the list in the exercise: \textbf{MAST} and \textbf{RAVE}. I though they would improve effectiveness noticeably, but the major improvement has not been seen. To make sure that I did not make any mistakes in the algorithms, I have rewritten them a few times and analyzed carefully. Results of these algorithms and comparisons between them are presented below.
+	
+	\section{Parameter Tuning}
+	In order to tune the parameters, firstly, I have decided to compare them to the previous agents I have written. FlatMC agent was the first one (actually pure random agent was the first one, but it was mainly used for testing the logic of the game, and whole design of the program) - it has fairly straightforward implementation and no parameters to tune, so it was pretty good to use. Also it turned out that with FlatMC policy you can get to the Gold League, so the agent is not so "stupid". As I was writing the next agent, I tried to get the best winrate against FlatMC. The advantage of that approach is that it is fast - especially because I have abstracted specific parts of the algorithms, so battle between two agents was one change in the code. This gave me general idea of what are the best configurations of the parameters for a particular agent. As I had more agents I had more material to test the parameters (so later on I also tested, e.g. MAST with pure MCTS, and so on ...). Also, not to rely only on my implementations, I have used Coding Game platform at first, and then CGBenchmark (against three opponents) in order to check if my configurations deal with other people agents. I had to tune the following parameters:
+	\begin{itemize}
+		\item \texttt{exploreSpeed} - exploration constant in the UCT selection policy, tested values: $[0.1, 1)$ with $step=0.1$
+		\item \texttt{epsilon} - $\epsilon$ constant in $\epsilon$-greedy simulation policy in MAST enhancement, tested values: $[0.1, 1)$ with $step=0.1$
+		\item \texttt{decayFactor} - $\gamma$ factor used to decay evaluations of actions in MAST policy from the previous rounds, tested values: $[0.1, 1)$ with $step=0.1$
+		\item \texttt{K} - factor in AMAF state-action evaluation used in RAVE policy, tested values: \\ $[5, 10, 20, 50, 100, 200, 500, 1000]$
+	\end{itemize}
+	With the methods described above the optimal value for all the parameters are as follows:
+	\begin{center}
+		\begin{tabular}{| l | c |}
+			\hline
+			\texttt{exploreSpeed} & \textbf{0.4} \\ \hline
+			\texttt{epsilon} & \textbf{0.8} \\ \hline
+			\texttt{decayFactor} & \textbf{0.6} \\ \hline
+			\texttt{K} & \textbf{50} \\ \hline
+		\end{tabular}
+	\end{center}
+	
+	\section{Method Comparison}
+	I have tested algorithms against each other on my own machine. Every comparison was made by taking the average score of 1000 playouts between the two particular agents. All of the parameters of the agents were set to be optimal.
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{| c | c | c | c | c |} \hline
+			\backslashbox{Agent1}{Agent2} & FlatMC & MCTS & MAST & RAVE \\ \hline
+			MCTS   & \backslashbox{89.4\%}{2.6\%} & & & \\ \hline
+			MAST   & \backslashbox{88.4\%}{6.1\%} & \backslashbox{39.7\%}{34.2\%} & & \\ \hline
+			RAVE   & \backslashbox{89.7\%}{2.4\%} & \backslashbox{35.2\%}{31.4\%} & \backslashbox{37.4\%}{30.3\%} & \\ \hline
+			MAST with RAVE & \backslashbox{89.1\%}{2.9\%} & \backslashbox{39.3\%}{33.4\%} & \backslashbox{38.8\%}{36.6\%} & \backslashbox{33.9\%}{33.4\%} \\ \hline
+		\end{tabular}
+		\caption{Algorithm comparison - winrates}
+	\end{table}
+
+	In addtion I have tested all of the variants in the Coding Game environment. Here are the results:
+	\begin{table}[H]
+		\centering
+		\begin{tabular}{| c | c |} \hline
+			Agent & Coding Game Top Players \\ \hline
+			FlatMC & 53\% \\ \hline
+			MCTS   & 34\% \\ \hline
+			MAST   & 37\% \\ \hline
+			RAVE   & 36\% \\ \hline
+			MAST with RAVE & 0\% \\ \hline
+		\end{tabular}
+		\caption{Algorithm comparison - place in the Coding Game platform in Gold League}
+	\end{table}
+	
+	We can see that we obtain better results with MAST or/and RAVE againt MCTS. The difference is not huge - we can also notice that a lot of times, when playing against pure MCTS, ends with draw, so we can suppose that variants play pretty equally - with one being a little better that the other. However one peculiar thing is that when it comes to the CodingGame platform, the pure MCTS deals with the opponents the best.
+	
+	There can be a few reasons why these enhancements do not improve much and when it comes to the CG environment, they even worsen the score. First of all 100ms for one turn could be too little time, in order for these techniques to gather enough data, so that it is meaningful - we know that for example in RAVE, we keep local evaluation of all the actions played down in the Monte-Carlo tree - these evaluations are based on the premise that one move is good independent from all of the other moves. So for this statistics to be reliable we have to gather some data, because they are already in some way disconnected from the current game state.
+	
+	Another reason could be that MAST and RAVE techniques are not the best choice for Ultimate Tic-Tac-Toe game. Maybe the dependency between the state and the action is too high to use state-independent action evaluations.
+	
+	The last thing is that, of course, the more time we give for one turn, the better the agent is playing. If MAST and RAVE enhancements are not the best choice for this game, if you use them, you also waste the potential of more calculations, if you have used other techniques. As we know MAST and RAVE require a little more memory and time consumption so that potential waste, could also be the reason why they do not improve too much.
 	
 \end{document}

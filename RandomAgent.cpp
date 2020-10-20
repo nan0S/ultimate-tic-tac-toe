@@ -2,7 +2,8 @@
 
 #include <cassert>
 
-RandomAgent::RandomAgent(AgentID id, const up<State>&, double, const AgentArgs&) : Agent(id) {
+RandomAgent::RandomAgent(AgentID id, double calcLimitInMs, const up<State>&, const AgentArgs&) :
+	Agent(id, calcLimitInMs) {
 
 }
 
@@ -12,6 +13,6 @@ sp<Action> RandomAgent::getAction(const up<State>& state) {
 	return Random::choice(validActions);
 }
 
-std::vector<KeyValue> RandomAgent::getDesc() const {
+std::vector<KeyValue> RandomAgent::getDesc(double) const {
 	return { {"Random agent with uniform distribution.", ""} };
 }

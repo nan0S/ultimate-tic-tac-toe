@@ -6,9 +6,9 @@
 
 class TicTacToeRealAgent : public Agent {
 public:
-	TicTacToeRealAgent(AgentID id, const up<State>&, double, const AgentArgs&);
+	TicTacToeRealAgent(AgentID id, double, const up<State>&, const AgentArgs&);
 	sp<Action> getAction(const up<State>& state) override;
-	std::vector<KeyValue> getDesc() const override;
+	std::vector<KeyValue> getDesc(double avgSimulationCount=0) const override;
 	
 private:
 	bool isInRange(int idx) const;

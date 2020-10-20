@@ -8,9 +8,9 @@ using param_t = MCTSAgentWithMASTAndRAVE::param_t;
 using reward_t = MCTSAgentWithMASTAndRAVE::reward_t;
 using MCTSNodeBase = MCTSAgentWithMASTAndRAVE::MCTSNodeBase;
 
-MCTSAgentWithMASTAndRAVE::MCTSAgentWithMASTAndRAVE(AgentID id, const up<State>& initialState, 
-		double calcLimitInMs, const AgentArgs& args) :
-	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs),
+MCTSAgentWithMASTAndRAVE::MCTSAgentWithMASTAndRAVE(AgentID id, double calcLimitInMs,
+		const up<State>& initialState, const AgentArgs& args) :
+	MCTSAgentBase(id, calcLimitInMs, std::mku<MCTSNode>(initialState)),
 	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)),
 	epsilon(getOrDefault(args, "epsilon", 0.8)),
 	decayFactor(getOrDefault(args, "decayFactor", 0.6)),
@@ -158,14 +158,13 @@ void MCTSAgentWithMASTAndRAVE::postWork() {
 			x.score *= decayFactor;
 }
 
-std::vector<KeyValue> MCTSAgentWithMASTAndRAVE::getDesc() const {
-	int averageSimulationCount = std::round(double(simulationCount) / timer.getTotalNumberOfCals());
+std::vector<KeyValue> MCTSAgentWithMASTAndRAVE::getDesc(double avgSimulationCount) const {
 	int averageSpeedSimPerSec = std::round((simulationCount * 1000.0) / timer.getTotalCalcTime());
 	return { { "MCTS Agent with RAVE selection policy and MAST epsilon-greedy simulation.", "" },
 		{ "", "" },
 		{ "Turn time limit", std::to_string(timer.getLimit()) + " ms" },
 		{ "Average turn time", std::to_string(timer.getAverageCalcTime()) + " ms" },
-		{ "Average number of simulations per turn", std::to_string(averageSimulationCount) + " sim/turn" },
+		{ "Average number of simulations per turn", std::to_string(avgSimulationCount) + " sim/turn" },
 		{ "Average simulation/s speed", std::to_string(averageSpeedSimPerSec) + " sim/sec" },
 		{ "", "" },
 		{ "Exploration speed constant (C) in UCT policy", std::to_string(exploreFactor) },

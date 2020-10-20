@@ -1,0 +1,23 @@
+#!/bin/sh
+
+foldername="hubert_obrzut_ai4g_e1"
+mkdir -p $foldername
+mkdir -p $foldername/doc
+
+for cppfile in ./*.cpp; do
+	cp $cppfile $foldername/$cppfile
+done
+for hppfile in ./*.hpp; do
+	cp $cppfile $foldername/$hppfile
+done
+
+cp Makefile $foldername
+cp merger $foldername
+cp README.md $foldername
+
+for texfile in ./doc/*.tex; do
+	cp $texfile $foldername/doc/$texfile
+done
+for pdffile in ./doc/*.pfd; do
+	cp $pdffile $foldername/doc/$pdffile
+done
