@@ -22,14 +22,12 @@ protected:
 		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 	};
 
-public:
-	using MCTSNode = MCTSNode;
-
-protected:
-	sp<MCTSNodeBase> treePolicy() override;
 	param_t eval(const sp<MCTSNodeBase>& node) override;
 	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	void backup(sp<MCTSNodeBase> node) override;
+
+private:
+	param_t exploreFactor;
 };
 
 #endif /* MCTS_AGENT_HPP */

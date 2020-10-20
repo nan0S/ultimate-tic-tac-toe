@@ -23,16 +23,11 @@ protected:
 		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 	};
 
-public:
-	using MCTSNode = MCTSNode;
-
-protected:
 	struct MASTActionStats {
 		reward_t score = 0;
 		int times = 0;
 	};
 
-	sp<MCTSNodeBase> treePolicy() override;
 	sp<MCTSNodeBase> expand(const sp<MCTSNodeBase>& node) override;
 	sp<MCTSNodeBase> select(const sp<MCTSNodeBase>& node) override;
 	param_t eval(const sp<MCTSNodeBase>& node) override;
@@ -46,12 +41,13 @@ protected:
 	void postWork() override;
 
 private:
+	param_t exploreFactor;
 	param_t epsilon;
 	param_t decayFactor;
+
 	int maxActionCount;
 	std::vector<std::vector<MASTActionStats>> actionsStats;
 	std::vector<std::pair<AgentID, int>> actionHistory;
-	int timesTreeDescended;
 	int defaultPolicyLength;
 };
 

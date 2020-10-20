@@ -4,31 +4,17 @@
 
 using param_t = MCTSAgent::param_t;
 using reward_t = MCTSAgent::reward_t;
-using MCTSNode = MCTSAgent::MCTSNode;
 using MCTSNodeBase = MCTSAgent::MCTSNodeBase;
 
 MCTSAgent::MCTSAgent(AgentID id, const up<State>& initialState, 
 		double calcLimitInMs, const AgentArgs& args) :
-	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs, args) {
+	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs),
+	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)) {
 
 }
 
-MCTSNode::MCTSNode(const up<State>& initialState) : MCTSNodeBase(initialState) {
+MCTSAgent::MCTSNode::MCTSNode(const up<State>& initialState) : MCTSNodeBase(initialState) {
 
-}
-
-sp<MCTSNodeBase> MCTSAgent::treePolicy() {
-	auto currentNode = root;
-	descended = 0;
-
-	while (!currentNode->isTerminal()) {
-		++descended;
-		if (currentNode->shouldExpand())
-			return expand(currentNode);
-		currentNode = select(currentNode);
-	}
-
-	return currentNode;
 }
 
 param_t MCTSAgent::eval(const sp<MCTSNodeBase>& node) {
@@ -55,24 +41,24 @@ void MCTSAgent::defaultPolicy(const sp<MCTSNodeBase>& initialNode) {
 }
 
 void MCTSAgent::backup(sp<MCTSNodeBase> node) {
-	int ascended = 0;
+	int timesTreeAscended = 0;
 	auto myReward = agentRewards[getID()];
 	auto myID = getID();
 
 	while (node) {
 		node->addReward(myReward, myID);
 		node = node->parent.lock();
-		++ascended;
+		++timesTreeAscended;
 	}
 
-	assert(descended + 1 == ascended);
+	assert(timesTreeDescended + 1 == timesTreeAscended);
 }
 
-sp<MCTSNodeBase> MCTSNode::makeChildFromState(up<State>&& state) {
+sp<MCTSNodeBase> MCTSAgent::MCTSNode::makeChildFromState(up<State>&& state) {
 	return std::mksh<MCTSNode>(std::move(state));
 }
 
-MCTSNode::MCTSNode(up<State>&& initialState) : MCTSNodeBase(std::move(initialState)) {
+MCTSAgent::MCTSNode::MCTSNode(up<State>&& initialState) : MCTSNodeBase(std::move(initialState)) {
 
 }
 

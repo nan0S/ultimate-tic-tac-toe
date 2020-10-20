@@ -9,46 +9,41 @@ public:
 	using param_t = MCTSAgentBase::param_t;
 	using reward_t = MCTSAgentBase::reward_t;
 	using MCTSNodeBase = MCTSAgentBase::MCTSNode;
-	using AgentArgs = Agent::AgentArgs;
 
 	MCTSAgentWithRAVE(AgentID id, const up<State> &initialState,
-		double calcLimitInMs, const AgentArgs& args);
+			double calcLimitInMs, const AgentArgs& args);
  
 	std::vector<KeyValue> getDesc() const override;
 
-private:
+protected:
 	struct MCTSNode : public MCTSNodeBase {
 		MCTSNode(const up<State>& initialState);
 		MCTSNode(up<State>&& initialState);
 
-		sp<MCTSNodeBase> getChildFromState(up<State>&& state) override;
-		int expandAndGetIdx();
-		int selectAndGetIdx(param_t exploreFactor);
+		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 
-		struct ActionStats {
-			reward_t score = 0;
-			int times = 0;
+		struct RAVENodeStats {
+			reward_t reward;
 		};
 
-		std::vector<ActionStats> actionStats;
+		std::vector<
 	};
 
-	sp<MCTSNodeBase> treePolicy() override;
-	int expandAndGetIdx(const sp<MCTSNode>& node);
-	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
-	sp<Action> getActionWithDefaultPolicy(const up<State>& state);
-	void backup(sp<MCTSNodeBase> node) override;
+	sp<MCTSNodeBase> expand(const sp<MCTSNodeBase>& node) override;
+	sp<MCTSNodeBase> select(const sp<MCTSNodeBase>& node) override;
+	param_t eval(const sp<MCTSNodeBase>& node) override;
 
-	void postWork() override;
+	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
+	void backup(sp<MCTSNodeBase> node) override;
 	void RAVEPolicy();
-	inline void updateActionStat(AgentID id, int actionIdx);
+	void postWork() override;
 
 private:
-	double KFactor;
+	param_t KFactor;
+
 	int maxActionCount;
-	std::vector<int> treeActionHistory;
-	std::vector<int> simActionHistory;
-	int timesTreeDescended;
+	std::vector<int> treeActionHistoryIdx;
+	std::vector<int> simActionHistoryIdx;
 	int defaultPolicyLength;
 };
 

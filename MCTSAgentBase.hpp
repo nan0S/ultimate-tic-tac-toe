@@ -37,17 +37,15 @@ protected:
 	};
 
 public:
-	using MCTSNode = MCTSNode;
-
-  	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
-		double calcLimitInMs, const AgentArgs& args);
+	MCTSAgentBase(AgentID id, up<MCTSNode>&& root,
+		double calcLimitInMs);
 
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	void changeCalcLimit(double newLimitInMs);
 
 protected:
-	virtual sp<MCTSNode> treePolicy() = 0;
+	virtual sp<MCTSNode> treePolicy();
 	virtual sp<MCTSNode> expand(const sp<MCTSNode>& node);
 	int expandGetIdx(const sp<MCTSNode>& node);
 	virtual sp<MCTSNode> select(const sp<MCTSNode>& node);
@@ -62,9 +60,8 @@ protected:
 	CalcTimer timer;
 	int maxAgentCount;
 	std::vector<reward_t> agentRewards;
-	param_t exploreFactor;
 
-	int descended;
+	int timesTreeDescended;
 	int simulationCount = 0;
 };
 
