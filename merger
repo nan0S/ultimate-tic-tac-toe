@@ -23,6 +23,8 @@ DEPS=(
 	MCTSAgentWithMAST.cpp
 	MCTSAgentWithRAVE.hpp
 	MCTSAgentWithRAVE.cpp
+	MCTSAgentWithMASTAndRAVE.hpp
+	MCTSAgentWithMASTAndRAVE.cpp
 	TicTacToe.hpp
 	TicTacToe.cpp
 	UltimateTicTacToe.hpp

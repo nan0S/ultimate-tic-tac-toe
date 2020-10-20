@@ -14,7 +14,7 @@ public:
 	using AgentArgs = Agent::AgentArgs;
 
 	GameRunner(double turnLimitInMs, const AgentArgs& agent1Args, const AgentArgs& agent2Args) :
-		turnLimitInMs(turnLimitInMs), agent1Args(agent1Args), agent2Args(agent2Args) {
+		turnLimitInMs(turnLimitInMs), agent1Args(agent1Args), agent2Args(agent2Args), agentSimCount(agentCount) {
 		
 	}
 
@@ -50,6 +50,10 @@ public:
 			if (verbose)
 				std::cout << *game << '\n';
 		}
+		
+
+		for (int i = 0; i < agentCount; ++i)
+			agentSimCount[i] += agents[i]->getAvgSimulationCount();
 
 		if (lastGame)
 			for (int i = 0; i < agentCount; ++i) {
@@ -75,6 +79,7 @@ private:
 	AgentArgs agent1Args;
 	AgentArgs agent2Args;
 	StatSystem statSystem;
+	std::vector<int> agentSimCount;
 };
 
 #endif /* GAME_RUNNER_HPP */

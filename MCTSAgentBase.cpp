@@ -155,3 +155,8 @@ void MCTSAgentBase::changeCalcLimit(double newLimitInMs) {
 void MCTSAgentBase::postWork() {
 
 }
+
+double MCTSAgentBase::getAvgSimulationCount() const {
+	assert(timer.getTotalNumberOfCals() != 0);
+	return double(simulationCount) / timer.getTotalNumberOfCals();
+}

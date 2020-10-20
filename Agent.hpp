@@ -29,6 +29,7 @@ public:
 	virtual std::vector<KeyValue> getDesc() const;
 	virtual param_t getOrDefault(const AgentArgs& args, const std::string& key, 
 		param_t defaultVal) const;
+	virtual double getAvgSimulationCount() const;
 	virtual ~Agent() = default;
 
 protected:

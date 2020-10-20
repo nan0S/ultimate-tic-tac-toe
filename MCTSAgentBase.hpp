@@ -43,6 +43,7 @@ public:
 	sp<Action> getAction(const up<State> &state) override;
 	void recordAction(const sp<Action> &action) override;
 	void changeCalcLimit(double newLimitInMs);
+	double getAvgSimulationCount() const override;
 
 protected:
 	virtual sp<MCTSNode> treePolicy();

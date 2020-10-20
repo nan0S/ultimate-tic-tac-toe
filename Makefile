@@ -15,7 +15,8 @@ OBJS = main.o \
 	MCTSAgent.o \
 	CGAgent.o \
 	MCTSAgentWithMAST.o \
-	MCTSAgentWithRAVE.o
+	MCTSAgentWithRAVE.o \
+	MCTSAgentWithMASTAndRAVE.o
 
 CC = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -Wreorder -O3

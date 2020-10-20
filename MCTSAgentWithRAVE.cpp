@@ -12,7 +12,7 @@ MCTSAgentWithRAVE::MCTSAgentWithRAVE(AgentID id, const up<State>& initialState,
 		double calcLimitInMs, const AgentArgs& args) :
 	MCTSAgentBase(id, std::mku<MCTSNode>(initialState), calcLimitInMs),
 	exploreFactor(getOrDefault(args, "exploreFactor", 0.4)),
-	KFactor(getOrDefault(args, "KFactor", 3)),
+	KFactor(getOrDefault(args, "KFactor", 50.0)),
 	maxActionCount(initialState->getActionCount()) {
 
 }

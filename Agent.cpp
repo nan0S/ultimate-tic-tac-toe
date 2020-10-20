@@ -38,3 +38,7 @@ param_t Agent::getOrDefault(const AgentArgs& args, const std::string& key,
 	param_t defaultVal) const {
 	return args.count(key) ? args.at(key) : defaultVal;
 }
+
+double Agent::getAvgSimulationCount() const {
+	return 0;
+}
