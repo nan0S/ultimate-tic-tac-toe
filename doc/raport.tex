@@ -44,7 +44,7 @@
 	I have decided to implement two enhancements from the list in the exercise: \textbf{MAST} and \textbf{RAVE}. I though they would improve effectiveness noticeably, but the major improvement has not been seen. To make sure that I did not make any mistakes in the algorithms, I have rewritten them a few times and analyzed carefully. Results of these algorithms and comparisons between them are presented below.
 	
 	\section{Parameter Tuning}
-	In order to tune the parameters, firstly, I have decided to compare them to the previous agents I have written. FlatMC agent was the first one (actually pure random agent was the first one, but it was mainly used for testing the logic of the game, and whole design of the program) - it has fairly straightforward implementation and no parameters to tune, so it was pretty good to use. Also it turned out that with FlatMC policy you can get to the Gold League, so the agent is not so "stupid". As I was writing the next agent, I tried to get the best winrate against FlatMC. The advantage of that approach is that it is fast - especially because I have abstracted specific parts of the algorithms, so battle between two agents was one change in the code. This gave me general idea of what are the best configurations of the parameters for a particular agent. As I had more agents I had more material to test the parameters (so later on I also tested, e.g. MAST with pure MCTS, and so on ...). Also, not to rely only on my implementations, I have used Coding Game platform at first, and then CGBenchmark (against three opponents) in order to check if my configurations deal with other people agents. I had to tune the following parameters:
+	In order to tune the parameters, firstly, I have decided to compare them to the previous agents I have written. FlatMC agent was the first one (actually pure random agent was the first one, but it was mainly used for testing the logic of the game, and whole design of the program) - it has fairly straightforward implementation and no parameters to tune, so it was pretty good to use. Also it turned out that with FlatMC policy you can get to the Gold League, so the agent is not so "stupid". As I was writing the next agent, I tried to get the best winrate against FlatMC. The advantage of that approach is that it is fast - especially because I have abstracted specific parts of the algorithms, so the battle between two agents consisted of one change in the code. This gave me the general idea of what are the best configurations of the parameters for a particular agent. As I had more agents I had more possibilities to test the parameters (so later on I also tested, e.g. MAST with pure MCTS, and so on ...). Also, not to rely only on my implementations, I have used Coding Game platform at first, and then CGBenchmark (against three opponents) in order to check if my configurations deal with other people agents. I had to tune the following parameters:
 	\begin{itemize}
 		\item \texttt{exploreSpeed} - exploration constant in the UCT selection policy, tested values: $[0.1, 1)$ with $step=0.1$
 		\item \texttt{epsilon} - $\epsilon$ constant in $\epsilon$-greedy simulation policy in MAST enhancement, tested values: $[0.1, 1)$ with $step=0.1$
@@ -85,7 +85,7 @@
 			MCTS   & 34\% \\ \hline
 			MAST   & 37\% \\ \hline
 			RAVE   & 36\% \\ \hline
-			MAST with RAVE & 0\% \\ \hline
+			MAST with RAVE & 37\% \\ \hline
 		\end{tabular}
 		\caption{Algorithm comparison - place in the Coding Game platform in Gold League}
 	\end{table}

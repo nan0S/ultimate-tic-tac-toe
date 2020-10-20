@@ -1,25 +1,27 @@
 #!/bin/sh
 
-foldername="hubert_obrzut_ai4g_e1"
+foldername="hubert_obrzut"
 mkdir -p $foldername
 mkdir -p $foldername/doc
+mkdir -p $foldername/src
 
-for cppfile in ./*.cpp; do
-	cp $cppfile $foldername/$cppfile
-done
-for hppfile in ./*.hpp; do
-	cp $cppfile $foldername/$hppfile
-done
+copy_ext_from_to() {
+	from=$1
+	ext=$2
+	to=$3
+	for file in $from/*.$ext; do
+		cp $file $to
+	done
+}
 
-cp Makefile $foldername
-cp merger $foldername
+copy_ext_from_to doc tex $foldername/doc
+copy_ext_from_to doc pdf $foldername/doc
+copy_ext_from_to src cpp $foldername/src
+copy_ext_from_to src hpp $foldername/src
+
 cp README.md $foldername
+cp src/Makefile $foldername/src
+cp src/merger $foldername/src
 
-for texfile in ./doc/*.tex; do
-	cp $texfile $foldername/doc/$texfile
-done
-for pdffile in ./doc/*.pfd; do
-	cp $pdffile $foldername/doc/$pdffile
-done
-
-zip 
+zip -r raport.zip $foldername
+rm -rf $foldername
