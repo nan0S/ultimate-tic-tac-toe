@@ -50,7 +50,7 @@ protected:
 	int expandGetIdx(const sp<MCTSNode>& node);
 	virtual sp<MCTSNode> select(const sp<MCTSNode>& node);
 	int selectGetIdx(const sp<MCTSNode>& node);
-	virtual param_t eval(const sp<MCTSNode>& node) = 0;
+	virtual param_t eval(const sp<MCTSNode>& node, const sp<Action>& action) = 0;
 	virtual void defaultPolicy(const sp<MCTSNode>& initialNode) = 0;
 	virtual void backup(sp<MCTSNode> node) = 0;
 	virtual void postWork();
@@ -63,6 +63,7 @@ protected:
 
 	int timesTreeDescended;
 	int simulationCount = 0;
+	int currentSimulationCount;
 };
 
 #endif /* MCTS_AGENT_BASE_HPP */

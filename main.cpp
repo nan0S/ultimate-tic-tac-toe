@@ -6,6 +6,7 @@
 #include "FlatMCTSAgent.hpp"
 #include "MCTSAgent.hpp"
 #include "MCTSAgentWithMAST.hpp"
+#include "MCTSAgentWithRAVE.hpp"
 
 #include <getopt.h>
 #include <fstream>
@@ -55,21 +56,23 @@ int main(int argc, char* argv[]) {
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMAST, FlatMCTSAgent>(
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithRAVE, MCTSAgent>(
 		turnLimitInMs, {
 			{ "exploreFactor", 0.4 },
 			{ "epsilon", 0.8 },
-			{ "decayFactor", 0.6 }
+			{ "decayFactor", 0.6 },
+			{ "KFactor", 40.0 }
 		},
 		{ { "exploreFactor", 0.4 } }
 	);
 	gameRunner.playGames(numberOfGames, verboseFlag);
 #else
-	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgentWithMAST>(
+	auto cgRunner = CGRunner<UltimateTicTacToe, MCTSAgentWithRAVE>(
 		turnLimitInMs, {
 			{ "exploreFactor", 0.4 },
 			{ "epsilon", 0.8 },
-			{ "decayFactor", 0.6 }
+			{ "decayFactor", 0.6 },
+			{ "KFactor", 50.0 }
 		}
 	);
 	cgRunner.playGame();

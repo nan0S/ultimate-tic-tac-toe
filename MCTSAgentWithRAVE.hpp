@@ -22,28 +22,28 @@ protected:
 
 		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 
-		struct RAVENodeStats {
-			reward_t reward;
+		struct RAVEActionStats {
+			reward_t reward = 0;
+			int visits = 0;
 		};
 
-		std::vector<
+		std::vector<RAVEActionStats> actionsStats;
 	};
 
 	sp<MCTSNodeBase> expand(const sp<MCTSNodeBase>& node) override;
 	sp<MCTSNodeBase> select(const sp<MCTSNodeBase>& node) override;
-	param_t eval(const sp<MCTSNodeBase>& node) override;
+	param_t eval(const sp<MCTSNodeBase>& node, const sp<Action>& action) override;
 
 	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	void backup(sp<MCTSNodeBase> node) override;
 	void RAVEPolicy();
-	void postWork() override;
 
 private:
+	param_t exploreFactor;
 	param_t KFactor;
 
 	int maxActionCount;
-	std::vector<int> treeActionHistoryIdx;
-	std::vector<int> simActionHistoryIdx;
+	std::vector<int> actionHistory;
 	int defaultPolicyLength;
 };
 

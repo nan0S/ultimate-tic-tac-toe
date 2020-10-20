@@ -30,7 +30,7 @@ protected:
 
 	sp<MCTSNodeBase> expand(const sp<MCTSNodeBase>& node) override;
 	sp<MCTSNodeBase> select(const sp<MCTSNodeBase>& node) override;
-	param_t eval(const sp<MCTSNodeBase>& node) override;
+	param_t eval(const sp<MCTSNodeBase>& node, const sp<Action>& action) override;
 
 	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	sp<Action> getActionWithDefaultPolicy(const up<State>& state);

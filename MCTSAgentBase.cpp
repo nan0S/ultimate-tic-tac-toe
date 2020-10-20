@@ -28,12 +28,14 @@ MCTSAgentBase::MCTSNode::MCTSNode(up<State>&& initialState)
 
 sp<Action> MCTSAgentBase::getAction(const up<State>&) {
 	timer.startCalculation();
+	currentSimulationCount = 0;
 
 	while (timer.isTimeLeft()) {
 		auto selectedNode = treePolicy();
 		defaultPolicy(selectedNode);
 		backup(selectedNode);
 		++simulationCount;
+		++currentSimulationCount;
 	}
 
 	const auto result = root->getBestAction();
@@ -97,14 +99,16 @@ sp<MCTSAgentBase::MCTSNode> MCTSAgentBase::select(const sp<MCTSNode>& node) {
 
 int MCTSAgentBase::selectGetIdx(const sp<MCTSNode>& node) {
 	const auto& children = node->children;
+	const auto& actions = node->actions;
 	assert(!children.empty());
+	assert(children.size() <= actions.size());
 
 	int selectIdx = 0;
-	auto evaluation = eval(node->children[0]);
+	auto evaluation = eval(children[0], actions[0]);
 	const int childCount = children.size();
 
 	for (int i = 1; i < childCount; ++i) {
-		auto curEvaluation = eval(children[i]);
+		auto curEvaluation = eval(children[i], actions[0]);
 		if (curEvaluation > evaluation)
 			evaluation = curEvaluation, selectIdx = i;
 	}

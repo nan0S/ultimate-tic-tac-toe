@@ -44,7 +44,7 @@ sp<MCTSNodeBase> MCTSAgentWithMAST::select(const sp<MCTSNodeBase>& node) {
 	return node->children[selectIdx];
 }
 
-param_t MCTSAgentWithMAST::eval(const sp<MCTSNodeBase>& node) {
+param_t MCTSAgentWithMAST::eval(const sp<MCTSNodeBase>& node, const sp<Action>&) {
 	const auto& v = std::dynamic_pointer_cast<MCTSNode>(node);
 	const auto& p = std::dynamic_pointer_cast<MCTSNode>(node->parent.lock());
 	assert(v);

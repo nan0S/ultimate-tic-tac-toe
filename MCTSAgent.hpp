@@ -22,7 +22,7 @@ protected:
 		sp<MCTSNodeBase> makeChildFromState(up<State>&& state) override;
 	};
 
-	param_t eval(const sp<MCTSNodeBase>& node) override;
+	param_t eval(const sp<MCTSNodeBase>& node, const sp<Action>& action) override;
 	void defaultPolicy(const sp<MCTSNodeBase>& initialNode) override;
 	void backup(sp<MCTSNodeBase> node) override;
 
