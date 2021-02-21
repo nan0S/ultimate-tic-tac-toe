@@ -1,3 +1,5 @@
 *.o
 ultimate-tictactoe
 CGSolver.cpp
+*.log
+*.zip
