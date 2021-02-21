@@ -3,3 +3,4 @@ ultimate-tictactoe
 CGSolver.cpp
 *.log
 *.zip
+.gdb_history
