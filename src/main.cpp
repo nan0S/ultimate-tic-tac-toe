@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
 
 #ifdef LOCAL
 	parseArgs(argc, argv);
-	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMASTAndRAVE, MCTSAgent>(
+	auto gameRunner = GameRunner<UltimateTicTacToe, MCTSAgentWithMASTAndRAVE, MCTSAgentWithMASTAndRAVE>(
 		turnLimitInMs, {
 				{ "exploreFactor", 0.4 },
 				{ "epsilon", 0.8 },
